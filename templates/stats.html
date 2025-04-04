@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{.Title}}</title>
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        form {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .not-found {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .clear-search {
+            margin-left: 10px;
+            color: #3498db;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<h1>Client Statistics</h1>
+
+<form method="get">
+    <label for="address">Search by Bitcoin Address:</label>
+    <input type="text" id="address" name="address" value="{{.Address}}" placeholder="Enter Bitcoin Address">
+    <button type="submit">Search</button>
+    {{if .Address}}
+    <a href="/" class="clear-search">Clear Search</a>
+    {{end}}
+</form>
+
+{{if .Address}}
+<h2>Results for: {{.Address}}</h2>
+{{if .NotFound}}
+<p class="not-found">No client found with Bitcoin address: {{.Address}}</p>
+{{end}}
+{{end}}
+
+{{if not .NotFound}}
+<table>
+    <tr>
+        <th>Client</th>
+        <th>Bitcoin Address</th>
+        <th>Active Since</th>
+        <th>Active Connections</th>
+        <th>Bytes Received</th>
+        <th>Bytes Sent</th>
+        <th>Total Bandwidth</th>
+        <th>Estimated Reward</th>
+    </tr>
+    {{range .Clients}}
+    <tr>
+        <td>{{.ID}}</td>
+        <td>{{.BitcoinAddr}}</td>
+        <td>{{.ActiveTime}}</td>
+        <td>{{.ActiveConns}}</td>
+        <td>{{.BytesIn}}</td>
+        <td>{{.BytesOut}}</td>
+        <td>{{.TotalBytes}}</td>
+        <td>{{.EstimatedReward}}</td>
+    </tr>
+    {{end}}
+</table>
+{{end}}
+</body>
+</html>

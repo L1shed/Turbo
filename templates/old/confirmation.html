@@ -1,0 +1,26 @@
+{{define "content"}}
+<h2>Payment Confirmation</h2>
+
+<div class="alert alert-success">
+  <p>Payment of {{printf "%.8f" .Payment.AmountCoin}} {{.Coin.Symbol}} received!</p>
+</div>
+
+<div class="payment-info">
+  <h3>Order Summary</h3>
+  <p>Amount: {{printf "%.8f" .Payment.AmountCoin}} {{.Coin.Symbol}} (${{printf "%.2f" .Payment.AmountUSD}} USD)</p>
+  <p>Bandwidth: {{.Payment.GB}} GB</p>
+
+  <form action="/process-confirmation" method="post">
+    <input type="hidden" name="payment_id" value="{{.Payment.ID}}">
+
+    <div class="alert alert-info">
+      <p>Confirm that you want to receive {{.Payment.GB}} GB of bandwidth?</p>
+    </div>
+
+    <div style="display: flex; gap: 1rem;">
+      <button type="submit" name="confirmation" value="yes">Yes, Create My Account</button>
+      <button type="submit" name="confirmation" value="no" style="background-color: #e74c3c;">No, Refund Payment</button>
+    </div>
+  </form>
+</div>
+{{end}}

@@ -1,0 +1,3 @@
+# Project exclude paths
+/extension/background.js
+/extension/popup.js

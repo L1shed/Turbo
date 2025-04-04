@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Bitcoin Proxy Client",
+  "version": "1.0",
+  "permissions": ["storage"],
+  "host_permissions": ["ws://localhost:8080/ws"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

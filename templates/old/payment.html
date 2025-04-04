@@ -1,0 +1,72 @@
+{{define "content"}}
+<h2>Payment Details</h2>
+
+<div class="payment-info">
+  <h3>Please send {{printf "%.8f" .Payment.AmountCoin}} {{.Coin.Symbol}}</h3>
+  <p>To the following address:</p>
+  <div style="word-break: break-all; font-family: monospace; padding: 10px; background-color: #eee; border-radius: 4px;">
+    {{.Payment.Address}}
+  </div>
+
+  <img src="{{.QRCodePath}}" alt="Payment QR Code" class="qr-code">
+
+  <div class="alert alert-info">
+    <p>Send exactly {{printf "%.8f" .Payment.AmountCoin}} {{.Coin.Symbol}} (${{printf "%.2f" .Payment.AmountUSD}} USD)</p>
+    <p>You will receive {{.Payment.GB}} GB of bandwidth</p>
+  </div>
+
+  <div class="timer">
+    <p>Waiting for payment <span id="time">00:15:00</span></p>
+  </div>
+</div>
+
+<div class="debug-panel">
+  <h3>Debug Tools</h3>
+  <p>For testing purposes only</p>
+  <form action="/fake-payment" method="post">
+    <input type="hidden" name="payment_id" value="{{.Payment.ID}}">
+    <button type="submit">Simulate Payment Received</button>
+  </form>
+</div>
+
+<script>
+  // Start countdown timer
+  function startTimer(duration, display) {
+    let timer = duration, minutes, seconds;
+    const interval = setInterval(function () {
+      minutes = parseInt(timer / 60, 10);
+      seconds = parseInt(timer % 60, 10);
+
+      minutes = minutes < 10 ? "0" + minutes : minutes;
+      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+      display.textContent = minutes + ":" + seconds;
+
+      if (--timer < 0) {
+        clearInterval(interval);
+        display.textContent = "Expired";
+      }
+    }, 1000);
+  }
+
+  window.onload = function () {
+    const fifteenMinutes = 60 * 15,
+            display = document.querySelector('#time');
+    startTimer(fifteenMinutes, display);
+  };
+
+  // Check payment status periodically
+  function checkPaymentStatus() {
+    fetch('/check-status?id={{.Payment.ID}}')
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === 'confirmed') {
+                window.location.href = '/confirmation?id={{.Payment.ID}}';
+              }
+            });
+  }
+
+  // Check every 10 seconds
+  setInterval(checkPaymentStatus, 10000);
+</script>
+{{end}}
