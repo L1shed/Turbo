@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: go-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_ADDR=redis:6379
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    container_name: redis-server
+    volumes:
+      - ./redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - backend
+
+networks:
+  backend:
+
+

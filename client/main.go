@@ -1,7 +1,6 @@
 package main
 
 import (
-	"common"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -13,7 +12,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Message = common.Message
+// TODO: UI
+//  - info "payout every day at 00:00"
+//  - real-time earning (bitcoin) data
+
+type Message struct {
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+	Host   string `json:"host,omitempty"`
+	Port   int    `json:"port,omitempty"`
+	Data   string `json:"data,omitempty"`
+	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
 
 type Connection struct {
 	conn     net.Conn
@@ -28,13 +39,19 @@ var (
 )
 
 func main() {
-	bitcoinAddr := flag.String("address", "not_set", "Send automatic Bitcoin rewards")
+	bitcoinAddr := flag.String("address", "undefined", "Send automatic Bitcoin rewards")
 
+	connectionAttempts := 0
 	for {
 		c, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws", nil)
 		if err != nil {
-			log.Println("dial:", err)
+			if connectionAttempts == 5 {
+				return
+			}
+
+			log.Println("Failed to connect to WebSocket server. Retrying in 5 seconds...")
 			time.Sleep(time.Second * 5)
+			connectionAttempts++
 			continue
 		}
 		log.Println("Connected to WebSocket server")

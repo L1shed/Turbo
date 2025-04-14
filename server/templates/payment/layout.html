@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{template "title" .}}</title>
+    <style>
+        :root {
+            --background-dark: #121212;
+            --card-background: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent-blue: #4169e1;
+            --accent-gray: #333333;
+            --accent-green: #2e8b57;
+            --accent-red: #b22222;
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background-dark);
+        }
+
+        .container {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        h1, h2 {
+            color: var(--text-primary);
+            margin-top: 0;
+            padding-bottom: 10px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--background-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            color: var(--text-primary);
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        input[type="submit"], button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover, button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: var(--accent-gray);
+        }
+
+        .btn-action {
+            background-color: var(--accent-blue);
+        }
+
+        .btn-warning {
+            background-color: var(--accent-red);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info-box {
+            background-color: rgba(65, 105, 225, 0.1);
+            border-left: 4px solid var(--accent-blue);
+            padding: 15px;
+            margin: 15px 0;
+            color: var(--text-secondary);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            height: 4px;
+            background-color: var(--accent-gray);
+            width: 100%;
+            z-index: 1;
+        }
+
+        .progress-active {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            height: 4px;
+            background-color: var(--accent-blue);
+            z-index: 2;
+            transition: width 0.3s ease;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            z-index: 3;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background-color: var(--accent-gray);
+            color: var(--text-secondary);
+            font-weight: bold;
+            position: relative;
+        }
+
+        .step.active .step-number {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .step-label {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .step.active .step-label {
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        .step-content {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .flex-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+    {{template "head" .}}
+</head>
+<body>
+<div class="container">
+    <h1 class="text-center">Turbo dProxy Bandwidth Payment</h1>
+    <div class="progress-container">
+        <div class="progress-bar"></div>
+        <div class="progress-active" style="width: {{if eq .Status "selecting"}}0%{{else if eq .Status "waiting"}}50%{{else if eq .Status "paid"}}100%{{end}}"></div>
+
+        <div class="step {{if eq .Status "selecting"}}active{{else if or (eq .Status "waiting") (eq .Status "paid")}}completed{{end}}">
+            <div class="step-number">1</div>
+            <div class="step-label">Order Information</div>
+        </div>
+        <div class="step {{if eq .Status "waiting"}}active{{else if eq .Status "paid"}}completed{{end}}">
+            <div class="step-number">2</div>
+            <div class="step-label">Confirm & Pay</div>
+        </div>
+        <div class="step {{if eq .Status "paid"}}active completed{{end}}">
+            <div class="step-number">3</div>
+            <div class="step-label">Receive Credentials</div>
+        </div>
+    </div>
+    {{template "content" .}}
+</div>
+</body>
+</html>

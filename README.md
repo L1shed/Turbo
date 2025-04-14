@@ -1,24 +1,23 @@
 # Turbo
 
-The solution for high-bandwidth residential proxies.
-
-Earn passive Bitcoin rewards for sharing your unused Internet traffic.
+**Fastest** and **cheapest** decentralized residential SOCKS5 Proxy network.
 
 ## In Progress
 
 This project is still at _Proof of Concept_ stage
 
 1. [x] Client connection quality analysis
-2. [ ] Crypto payment gateway
-3. [ ] ~~Switching from WebSocket to gRPC~~
-4. [ ] Chrome Extension for client
-5. [ ] Automatic Bitcoin rewards
+2. [x] Crypto payment gateway
+3. [x] Redis auth for SOCKS proxy
+4. [ ] ~~Switching from WebSocket to gRPC or QWIC~~
+5. [ ] ~~Chrome Extension for client~~
+6. [ ] Automatic Bitcoin rewards
 
 ## Self-host
 
-Run server, clients docker images
+Run server docker images and connect clients.
 
-See stats at https://localhost:8080/stats
+See clients stats at https://localhost:8080/stats
 
 ## Traffic flow
 
@@ -41,10 +40,26 @@ sequenceDiagram
 
 ### Run a Node
 
+Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
+
+### Reward
+
 Reward is `$0.01` per GB shared, that may seem low but the network is small so the handled bandwidth is high.
 
 For example, a node shares 1 GB/s of bandwidth.
 At the current price rate we can expect $0.01\$/sec = 432\$/month$ per device if running 24/7.
+
+The reward is paid in Bitcoin every day at 00:00 UTC (only if reward > 0.000,006 BTC).
+
+### Score calculation
+
+$$
+S = w_L \cdot 40L + w_R \cdot 60R
+$$
+
+Where:
+- $L$: Latency in ms
+- $R$: Reliability
 
 ## Buy Bandwidth
 
@@ -54,7 +69,7 @@ visit our website
 
 [//]: # (Monetization is based on _connections_, requests that client performed successfully.)
 
-## HWID Bans
+[//]: # (## HWID Bans)
 
  
 
