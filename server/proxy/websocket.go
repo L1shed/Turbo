@@ -3,6 +3,232 @@ package proxy
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
+	"net"
+	"server/proxy/socks"
+	"sync/atomic"
+	"time"
+)
+
+type Message struct {
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+	Host   string `json:"host,omitempty"`
+	Port   int    `json:"port,omitempty"`
+	Data   string `json:"data,omitempty"`
+	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
+// SocksConn holds the SOCKS5 connection and its data channel
+type SocksConn struct {
+	id       string
+	conn     net.Conn
+	dataChan chan []byte
+}
+
+type ClientStats struct {
+	ConnectTime   time.Time
+	ActiveConns   int32
+	BytesSent     uint64
+	BytesReceived uint64
+	BitcoinAddr   string
+}
+
+var (
+	nextID int
+
+	connectionTimeout = 5 * time.Second
+)
+
+func (c *QuicClient) HandleSocksConnection(sc *SocksConn) {
+	go func() {
+		buffer := make([]byte, 32*1024)
+		for {
+			n, err := sc.conn.Read(buffer)
+			if err != nil {
+				c.sendCloseMessage(sc.id)
+				return
+			}
+
+			if n > 0 {
+				// Send data back to client
+				encodedData := base64.StdEncoding.EncodeToString(buffer[:n])
+				msg := Message{
+					Type: "data",
+					ID:   sc.id,
+					Data: encodedData,
+				}
+
+				if err := c.SendMessage(msg); err != nil {
+					log.Printf("Failed to send data to client: %v", err)
+					return
+				}
+
+				atomic.AddUint64(&c.Stats.BytesSent, uint64(n))
+			}
+		}
+	}()
+}
+
+func HandleSocksConn(conn net.Conn) {
+	defer conn.Close()
+
+	host, port, err := socks.HandleSocksHandshake(conn)
+
+	if err != nil {
+		log.Println("SOCKS handshake failed:", err)
+		return
+	}
+
+	var client *QuicClient
+	success := false
+	attempts := 0
+
+	for !success && attempts < 3 {
+		client = FindAvailableClient()
+		if client == nil {
+			log.Println("No active WebSocket Clients available")
+			return
+		}
+
+		// Assign ID and set up connection
+		client.mutex.Lock()
+		id := fmt.Sprintf("%d", nextID)
+		nextID++
+		client.mutex.Unlock()
+
+		dataChan := make(chan []byte, 100)
+		sc := &SocksConn{
+			id:       id,
+			conn:     conn,
+			dataChan: dataChan,
+		}
+
+		client.socksMutex.Lock()
+		client.socksConns[id] = sc
+		client.socksMutex.Unlock()
+
+		go client.HandleSocksConnection(sc)
+
+		atomic.AddInt32(&client.Stats.ActiveConns, 1)
+
+		// Send CONNECT request over WebSocket
+		msg := Message{Type: "connect", ID: id, Host: host, Port: port}
+		err = client.SendMessage(msg)
+
+		if err != nil {
+			log.Println("WriteJSON error:", err)
+			// Clean up and try another client
+			client.socksMutex.Lock()
+			delete(client.socksConns, id)
+			client.socksMutex.Unlock()
+			atomic.AddInt32(&client.Stats.ActiveConns, -1)
+			continue
+		}
+
+		// Wait for connect response with timeout
+		respChan := make(chan Message)
+		client.respMutex.Lock()
+		client.respChans[id] = respChan
+		client.respMutex.Unlock()
+
+		// Set up response timeout
+		var respMsg Message
+		select {
+		case respMsg = <-respChan:
+			// Response received within timeout
+			if respMsg.Status == "success" {
+				success = true
+
+				_, err = conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0})
+				if err != nil {
+					log.Println(err)
+					client.sendCloseMessage(sc.id)
+					continue
+				}
+				client.Metrics.Reliability *= 1.02
+				client.UpdateScore()
+
+				go relayFromSocksToQuic(client, sc, sc.id)
+				relayFromChanToSocks(client, sc, sc.id)
+				return
+			} else {
+				log.Printf("Client %s failed to connect to %s:%d", client.id, host, port)
+				client.socksMutex.Lock()
+				delete(client.socksConns, id)
+				client.socksMutex.Unlock()
+				atomic.AddInt32(&client.Stats.ActiveConns, -1)
+			}
+		case <-time.After(connectionTimeout):
+			log.Printf("Connection timeout for client %s to %s:%d", client.id, host, port)
+
+			client.respMutex.Lock()
+			delete(client.respChans, id)
+			client.respMutex.Unlock()
+
+			client.socksMutex.Lock()
+			delete(client.socksConns, id)
+			client.socksMutex.Unlock()
+
+			client.Metrics.Reliability *= 0.8
+			client.UpdateScore()
+
+			atomic.AddInt32(&client.Stats.ActiveConns, -1)
+
+		}
+		attempts++
+	}
+
+	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
+}
+
+func relayFromSocksToQuic(client *QuicClient, sc *SocksConn, id string) {
+	buf := make([]byte, 4096)
+	for {
+		n, err := sc.conn.Read(buf)
+		if err != nil {
+			client.sendCloseMessage(id)
+			return
+		}
+
+		dataSize := uint64(n)
+		atomic.AddUint64(&client.Stats.BytesSent, dataSize)
+
+		data := base64.StdEncoding.EncodeToString(buf[:n])
+		msg := Message{Type: "data", ID: id, Data: data}
+		if client.conn != nil {
+			client.SendMessage(msg)
+		}
+	}
+}
+
+func relayFromChanToSocks(client *QuicClient, sc *SocksConn, id string) {
+	for data := range sc.dataChan {
+		_, err := sc.conn.Write(data)
+		if err != nil {
+			client.sendCloseMessage(id)
+			return
+		}
+	}
+}
+
+func (c *QuicClient) sendCloseMessage(id string) {
+	msg := Message{Type: "close", ID: id}
+	if c.conn != nil {
+		c.SendMessage(msg)
+	}
+
+	c.socksMutex.Lock()
+	delete(c.socksConns, id)
+	c.socksMutex.Unlock()
+
+	atomic.AddInt32(&c.Stats.ActiveConns, -1)
+}
+
+/*import (
+	"encoding/base64"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net"
@@ -50,13 +276,7 @@ type WebSocketClient struct {
 	Stats      *ClientStats
 }
 
-type ClientStats struct {
-	ConnectTime   time.Time
-	ActiveConns   int32
-	BytesSent     uint64
-	BytesReceived uint64
-	BitcoinAddr   string
-}
+
 
 // SocksConn holds the SOCKS5 connection and its data channel
 type SocksConn struct {
@@ -146,12 +366,10 @@ func wsReader(client *WebSocketClient) {
 			client.socksMutex.Unlock()
 		case "address":
 			client.Stats.BitcoinAddr = msg.ID
-			go client.Ping()
+			go client.ReportPing()
 		case "pong":
 			if time.Since(client.lastPing).Seconds() > 30 {
 				client.conn.Close()
-				// TODO: proper Timeout
-				// TODO: proper close handling
 			}
 			client.Pong(int16(time.Since(client.lastPing).Milliseconds()))
 		}
@@ -192,83 +410,6 @@ func HandleSocksConn(conn net.Conn) {
 			dataChan: dataChan,
 		}
 
-		client.socksMutex.Lock()
-		client.socksConns[id] = sc
-		client.socksMutex.Unlock()
-
-		atomic.AddInt32(&client.Stats.ActiveConns, 1)
-
-		// Send CONNECT request over WebSocket
-		msg := Message{Type: "connect", ID: id, Host: host, Port: port}
-		client.mutex.Lock()
-		err = client.conn.WriteJSON(msg)
-		client.mutex.Unlock()
-
-		if err != nil {
-			log.Println("WriteJSON error:", err)
-			// Clean up and try another client
-			client.socksMutex.Lock()
-			delete(client.socksConns, id)
-			client.socksMutex.Unlock()
-			atomic.AddInt32(&client.Stats.ActiveConns, -1)
-			continue
-		}
-
-		// Wait for connect response with timeout
-		respChan := make(chan Message)
-		client.respMutex.Lock()
-		client.respChans[id] = respChan
-		client.respMutex.Unlock()
-
-		// Set up response timeout
-		var respMsg Message
-		select {
-		case respMsg = <-respChan:
-			// Response received within timeout
-			if respMsg.Status == "success" {
-				success = true
-
-				_, err = conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0})
-				if err != nil {
-					log.Println(err)
-					sendCloseMessage(client, sc.id)
-					continue
-				}
-				client.Metrics.Reliability *= 1.02
-				client.UpdateScore()
-
-				go relayFromSocksToWS(client, sc, sc.id)
-				relayFromChanToSocks(client, sc, sc.id)
-				return
-			} else {
-				log.Printf("Client %s failed to connect to %s:%d", client.id, host, port)
-				client.socksMutex.Lock()
-				delete(client.socksConns, id)
-				client.socksMutex.Unlock()
-				atomic.AddInt32(&client.Stats.ActiveConns, -1)
-			}
-		case <-time.After(connectionTimeout):
-			log.Printf("Connection timeout for client %s to %s:%d", client.id, host, port)
-
-			client.respMutex.Lock()
-			delete(client.respChans, id)
-			client.respMutex.Unlock()
-
-			client.socksMutex.Lock()
-			delete(client.socksConns, id)
-			client.socksMutex.Unlock()
-
-			client.Metrics.Reliability *= 0.8
-			client.UpdateScore()
-
-			atomic.AddInt32(&client.Stats.ActiveConns, -1)
-
-		}
-		attempts++
-	}
-
-	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
-}
 
 func relayFromSocksToWS(client *WebSocketClient, sc *SocksConn, id string) {
 	buf := make([]byte, 4096)
@@ -316,3 +457,4 @@ func sendCloseMessage(client *WebSocketClient, id string) {
 
 	atomic.AddInt32(&client.Stats.ActiveConns, -1)
 }
+*/

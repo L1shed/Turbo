@@ -50,7 +50,7 @@ func HandleSocksHandshake(conn net.Conn) (string, int, error) {
 	}
 
 	if !authSupported {
-		return "", 0, errors.New("no valid supported auth methods")
+		return "", 0, errors.New(fmt.Sprintf("no valid supported auth methods, received %v", authMethods))
 	}
 
 	response := []byte{SocksVersion, UserPassAuth}

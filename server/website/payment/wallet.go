@@ -12,7 +12,6 @@ var (
 )
 
 func generateAddress(currency, id string) string {
-
 	var coin hdwallet.Option
 	switch currency {
 	case coinname.BTC:

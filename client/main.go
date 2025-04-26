@@ -1,15 +1,11 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
-	"fmt"
-	"log"
+	"github.com/getlantern/systray"
+	"github.com/gorilla/websocket"
 	"net"
 	"sync"
-	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 // TODO: UI
@@ -32,38 +28,62 @@ type Connection struct {
 }
 
 var (
-	wsConn      *websocket.Conn
-	wsMutex     sync.Mutex
-	clientConns = make(map[string]*Connection)
-	clientMutex sync.Mutex
+	wsConn  *websocket.Conn
+	wsMutex sync.Mutex
+	//clientConns = make(map[string]*Connection)
+	//clientMutex sync.Mutex
+	bitcoinAddr *string
 )
 
 func main() {
-	bitcoinAddr := flag.String("address", "undefined", "Send automatic Bitcoin rewards")
+	bitcoinAddr = flag.String("address", "undefined", "Send automatic Bitcoin rewards")
 
-	connectionAttempts := 0
+	systray.Run(onReady, nil)
+}
+
+func onReady() {
+	setupTray()
+
+	/*connectionAttempts := 0
+	println(os.Getpid())
+	retryDelay := time.Second * (4 + time.Duration(os.Getpid()/1000))
 	for {
-		c, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/ws", nil)
+		c, _, err := websocket.DefaultDialer.Dial("ws://192.168.1.144:8080/ws", nil)
 		if err != nil {
-			if connectionAttempts == 5 {
-				return
+			if connectionAttempts == 2 {
+				retryDelay = time.Minute * 3
 			}
 
-			log.Println("Failed to connect to WebSocket server. Retrying in 5 seconds...")
-			time.Sleep(time.Second * 5)
+			log.Println("Failed to connect to WebSocket server. Retrying...")
+			time.Sleep(retryDelay)
 			connectionAttempts++
 			continue
 		}
 		log.Println("Connected to WebSocket server")
 		wsConn = c
+		connectionAttempts = 0
 
 		wsConn.WriteJSON(&Message{Type: "address", ID: *bitcoinAddr})
 
 		wsReader()
-	}
+	}*/
+
+	go connectQuicServer()
 }
 
-func wsReader() {
+/*func onExit() {
+	// Cleanup code here
+	if wsConn != nil {
+		wsConn.Close()
+	}
+	clientMutex.Lock()
+	for _, cc := range clientConns {
+		cc.conn.Close()
+	}
+	clientMutex.Unlock()
+}*/
+
+/*func wsReader() {
 	for {
 		var msg Message
 		err := wsConn.ReadJSON(&msg)
@@ -142,16 +162,6 @@ func relayFromConnToWS(cc *Connection, id string) {
 	}
 }
 
-func relayFromChanToConn(cc *Connection, id string) {
-	for data := range cc.dataChan {
-		_, err := cc.conn.Write(data)
-		if err != nil {
-			sendCloseMessage(id)
-			return
-		}
-	}
-}
-
 func sendCloseMessage(id string) {
 	msg := Message{Type: "close", ID: id}
 	wsMutex.Lock()
@@ -162,4 +172,4 @@ func sendCloseMessage(id string) {
 	clientMutex.Lock()
 	delete(clientConns, id)
 	clientMutex.Unlock()
-}
+}*/

@@ -1,14 +1,19 @@
 package proxy
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+)
 
-func FindAvailableClient() *WebSocketClient {
-	ClientMutex.RLock()
-	defer ClientMutex.RUnlock()
+const ScoreWeight = 0.1
+
+func FindAvailableClient() *QuicClient {
+	QuicMutex.RLock()
+	defer QuicMutex.RUnlock()
 
 	totalWeight := 0.0
-	for _, client := range Clients {
-		totalWeight += client.Metrics.Score * 2
+	for _, client := range QuicClients {
+		totalWeight += math.Pow(client.Metrics.Score, ScoreWeight)
 	}
 
 	if totalWeight == 0 {
@@ -18,8 +23,8 @@ func FindAvailableClient() *WebSocketClient {
 	randomPoint := rand.Float64() * totalWeight
 
 	currentWeight := 0.0
-	for _, client := range Clients {
-		currentWeight += client.Metrics.Score * 2
+	for _, client := range QuicClients {
+		currentWeight += math.Pow(client.Metrics.Score, ScoreWeight)
 
 		if currentWeight >= randomPoint {
 			return client

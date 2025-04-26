@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"server/proxy"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -31,7 +32,7 @@ type ViewData struct {
 	NotFound bool
 }
 
-func getClientData(id string, client *proxy.WebSocketClient) ClientData {
+func getClientData(id string, client *proxy.QuicClient) ClientData {
 	bytesIn := atomic.LoadUint64(&client.Stats.BytesReceived)
 	bytesOut := atomic.LoadUint64(&client.Stats.BytesSent)
 	totalBytes := bytesIn + bytesOut
@@ -63,21 +64,22 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 		Clients: []ClientData{},
 	}
 
-	proxy.ClientMutex.RLock()
-	defer proxy.ClientMutex.RUnlock()
+	proxy.QuicMutex.RLock()
+	defer proxy.QuicMutex.RUnlock()
 
 	if address != "" {
 		// Search for clients with specified Bitcoin address
-		for id, client := range proxy.Clients {
+		for id, client := range proxy.QuicClients {
 			if client.Stats.BitcoinAddr == address {
 				viewData.Clients = append(viewData.Clients, getClientData(id, client))
 			}
 		}
 		viewData.NotFound = len(viewData.Clients) == 0
 	} else {
+		i := 1
 		// Show all clients
-		for id, client := range proxy.Clients {
-			viewData.Clients = append(viewData.Clients, getClientData(id, client))
+		for _, client := range proxy.QuicClients {
+			viewData.Clients = append(viewData.Clients, getClientData("anon"+strconv.Itoa(i), client))
 		}
 	}
 
