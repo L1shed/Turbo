@@ -1,9 +1,6 @@
 # Turbo
 
-> **Fastest** and **cheapest** decentralized residential SOCKS5 Proxy network.
-
-
-## In Progress
+> **Fastest** and **cheapest** ~~decentralized~~ residential SOCKS5 Proxy network.
 
 > [!NOTE]
 > This project is still at _Proof of Concept_ stage
@@ -13,11 +10,10 @@ Here is a quick overview of the features:
 ### In progress
 
 1. [x] Client connection quality analysis
-2. [x] Switching from WebSocket to QUIC, gRPC, WebRTC (QUIC was chosen)
-3. [x] Crypto payment gateway
-4. [x] Redis auth for SOCKS proxy
-5. [ ] ~~Chrome Extension for client~~
-6. [ ] Automatic Bitcoin rewards
+2. [x] Crypto payment gateway
+3. [x] Redis auth for SOCKS proxy
+4. [ ] ~~Chrome Extension for client~~
+5. [ ] Automatic Bitcoin rewards
 
 
 
@@ -86,22 +82,20 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant SOCKS5_Client as SOCKS5 Client
+    participant SOCKS5_Client as SOCKS5 Client (User)
     participant Proxy_Server as Proxy Server
-    participant Proxy_Client as Proxy Client
+    participant Proxy_Client as Client Node
     participant Internet as Internet
 
     SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request
     Proxy_Server->>Proxy_Client: 2. Forward request via QUIC
     Proxy_Client->>Internet: 3. Process request & fetch data
-    Internet-->>Proxy_Client: 4. Return response
-    Proxy_Client-->>Proxy_Server: 5. Send response via QUIC
-    Proxy_Server-->>SOCKS5_Client: 6. Send response to SOCKS5 Client
 ```
+
 
 
 ## Buy Bandwidth
 
 Want to buy proxy access from our network for web-scraping?
 
-visit our website, discord or telegram
+Join our [Discord server](https://discord.gg/ZqdvQkSEc7) and create a ticket.
