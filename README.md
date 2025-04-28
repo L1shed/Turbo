@@ -10,42 +10,16 @@
 
 Here is a quick overview of the features:
 
+### In progress
+
 1. [x] Client connection quality analysis
-2. [x] Crypto payment gateway
-3. [x] Redis auth for SOCKS proxy
-4. [ ] ~~Switching from WebSocket to gRPC, QWIC or WebRTC~~
+2. [x] Switching from WebSocket to QUIC, gRPC, WebRTC (QUIC was chosen)
+3. [x] Crypto payment gateway
+4. [x] Redis auth for SOCKS proxy
 5. [ ] ~~Chrome Extension for client~~
 6. [ ] Automatic Bitcoin rewards
 
-## Architecture
 
-```mermaid
-flowchart TD
-    A[User] -->|Proxy request| B[Proxy Server]
-    B -->|Forward request via WebSocket| C[Proxy Client]
-    C -->|Process request & fetch data| D[Internet]
-    D -->|Return response| C
-    C -->|Send response via WebSocket| B
-    B -->|Send response to User| A
-
-    %% Payment Flow
-    A -->|Purchase bandwidth| G[Payment Gateway]
-    G -->|Process payment| F[Bitcoin Network]
-    F -->|Confirm transaction| G
-    G -->|Authorize access| B
-
-    %% Reward Flow
-    B -->|Calculate bandwidth usage| G
-    G -->|Daily Bitcoin rewards| H[Node Runner]
-
-    %% Node Runner operates Proxy Client
-    H -->|Operates| C
-
-    subgraph Payment System
-        F
-        G
-    end
-```
 
 ## Monetization
 
@@ -55,61 +29,79 @@ Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
 
 ### Reward
 
-Reward is `$0.01` per GB shared, that may seem low but the network is small so the handled bandwidth is high.
+Reward is `$1.00` per GB shared, that may seem low but the network is small so the handled bandwidth is high.
 
-For example, a node shares 1 GB/s of bandwidth.
-At the current price rate we can expect $0.01\$/sec = 432\$/month$ per device if running 24/7.
+For example, a node shares 0.1 GB/hour of bandwidth.
+At the current price rate we can expect $73.2/month per device if running 24/7.
 
-The reward is paid in Bitcoin every day at 00:00 UTC (only if reward > 0.000,006 BTC).
+The reward is paid in Bitcoin every day at 00:00 UTC (only if reward > $5 in BTC).
 
 ### Score calculation
 
 $$
 S = w_L \cdot L + w_R \cdot R
 $$
+
 Where:
 - $L$: Latency in ms
 - $R$: Reliability
 
-## Self-host Server Node
+## Self-host a Server Node
 
 Run server docker image and connect clients.
 
 See clients stats at https://localhost:8080/stats
 
-## Traffic flow
+## System Design
 
-[//]: # (```mermaid)
+### Global architecture
 
-[//]: # (sequenceDiagram)
+```mermaid
+flowchart TD
+    User[User]
+    ProxyServer[Proxy Server]
+    Redis[(Redis Database)]
+    ClientNode[Client Node]
+    NodeRunner[Node Runner]
+    PaymentGateway[Crypto Payment Gateway]
+    BitcoinNetwork[(Bitcoin Network)]
+    TargetWebsite[Target Website / Internet]
 
-[//]: # (    participant SOCKS5_Client as SOCKS5 Client)
+    User --> |Sends Requests| ProxyServer
+    User --> |Buys Credits| PaymentGateway
 
-[//]: # (    participant Proxy_Server as Proxy Server)
+    ProxyServer --> |Uses for User Auth & Credits| Redis
+    ProxyServer <--> |QUIC Messaging| ClientNode
 
-[//]: # (    participant Proxy_Client as Proxy Client)
+    ClientNode --> |Processes Requests To| TargetWebsite
+    NodeRunner --> |Operates| ClientNode
 
-[//]: # (    participant Internet as Internet)
+    PaymentGateway --> |Processes Payments| BitcoinNetwork
+    PaymentGateway --> |Updates Credits In| Redis
 
-[//]: # ()
-[//]: # (    SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request)
+    BitcoinNetwork --> |Sends Rewards in BTC| NodeRunner
+```
 
-[//]: # (    Proxy_Server->>Proxy_Client: 2. Forward request via WebSocket)
+### Traffic flow
 
-[//]: # (    Proxy_Client->>Internet: 3. Process request & fetch data)
+```mermaid
+sequenceDiagram
+    participant SOCKS5_Client as SOCKS5 Client
+    participant Proxy_Server as Proxy Server
+    participant Proxy_Client as Proxy Client
+    participant Internet as Internet
 
-[//]: # (    Internet-->>Proxy_Client: 4. Return response)
-
-[//]: # (    Proxy_Client-->>Proxy_Server: 5. Send response via WebSocket)
-
-[//]: # (    Proxy_Server-->>SOCKS5_Client: 6. Send response to SOCKS5 Client)
-
-[//]: # (```)
+    SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request
+    Proxy_Server->>Proxy_Client: 2. Forward request via QUIC
+    Proxy_Client->>Internet: 3. Process request & fetch data
+    Internet-->>Proxy_Client: 4. Return response
+    Proxy_Client-->>Proxy_Server: 5. Send response via QUIC
+    Proxy_Server-->>SOCKS5_Client: 6. Send response to SOCKS5 Client
+```
 
 
 ## Buy Bandwidth
 
-Want to buy traffic from our network for web-scraping?
+Want to buy proxy access from our network for web-scraping?
 
-visit our website
-discord or telegram
+visit our website, discord or telegram

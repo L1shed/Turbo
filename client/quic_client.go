@@ -138,7 +138,6 @@ func sendMessage(msg *Message) error {
 	}
 	data = append(data, '\n') // Add newline for JSON decoder
 
-	log.Printf("Sending message type: %s", msg.Type)
 	_, err = quicStream.Write(data)
 	if err != nil {
 		log.Printf("Error writing to QUIC stream: %v", err)
