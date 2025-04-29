@@ -7,7 +7,7 @@
 
 Here is a quick overview of the features:
 
-### In progress
+## Features
 
 1. [x] Client connection quality analysis
 2. [x] Crypto payment gateway
@@ -49,9 +49,27 @@ Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
 
 ### Run a Client Node
 
-Start earning by running the [latest release](https://github.com/L1shed/Turbo/releases) of the client node in background.
+#### Compatibility
 
-[//]: # (TODO: Add detailed connection instructions, help, visual tutorial.)
+Start earning today by running client node in the background.
+
+| Platform | Supported    |
+|----------|--------------|
+| Windows  | ✅            |
+| Linux    | Console only |
+| macOS    | ✅            |
+| Mobile   | ❌            |
+
+- Download the [latest release](https://github.com/L1shed/Turbo/releases) for your platform.
+- Open the downloaded executable — a new icon will appear in your system tray.
+- Click on the icon and select **"Dashboard"**.
+
+![img.png](.github/assets/img.png)
+- A page will open where you can link your wallet address via **WalletConnect** or enter it manually.
+
+After that, you will be able to see your node(s) score, shared bandwidth and reward.
+
+In fact, you can run several nodes on different devices with the same wallet
 
 ### Reward
 
@@ -72,7 +90,7 @@ $$
 S = w_L \cdot L + w_R \cdot R
 $$
 
-Where $w_L$: 60%, $w_R$: 40%
+Where $w_L = 60\%$ , $w_R = 40\%$
 
 ### Self-host a Server Node
 
