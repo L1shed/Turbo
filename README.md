@@ -49,9 +49,9 @@ Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
 
 ### Run a Client Node
 
-#### Compatibility
-
 Start earning today by running client node in the background.
+
+#### Compatibility
 
 | Platform | Supported    |
 |----------|--------------|
@@ -59,6 +59,8 @@ Start earning today by running client node in the background.
 | Linux    | Console only |
 | macOS    | ✅            |
 | Mobile   | ❌            |
+
+#### Installation
 
 - Download the [latest release](https://github.com/L1shed/Turbo/releases) for your platform.
 - Open the downloaded executable — a new icon will appear in your system tray.
@@ -69,7 +71,7 @@ Start earning today by running client node in the background.
 
 After that, you will be able to see your node(s) score, shared bandwidth and reward.
 
-In fact, you can run several nodes on different devices with the same wallet
+In fact, you can run several nodes on different devices/IPs with the same wallet.
 
 ### Reward
 
@@ -93,6 +95,8 @@ $$
 Where $w_L = 60\%$ , $w_R = 40\%$
 
 ### Self-host a Server Node
+
+You're free to operate your own server for commercial use.
 
 Run server docker image and connect clients.
 
