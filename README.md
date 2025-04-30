@@ -5,8 +5,6 @@
 > [!NOTE]
 > This project is still at _Proof of Concept_ stage
 
-Here is a quick overview of the features:
-
 ## Features
 
 1. [x] Client connection quality analysis
@@ -92,7 +90,7 @@ $$
 S = w_L \cdot L + w_R \cdot R
 $$
 
-Where $w_L =$ 60% , $w_R = $40%
+Where $w_L =$ 60% , $w_R =$ 40%
 
 ### Self-host a Server Node
 
