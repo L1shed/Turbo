@@ -26,7 +26,7 @@ flowchart TD
     NodeRunner[Node Runner]
     PaymentGateway[Crypto Payment Gateway]
     BitcoinNetwork[(Bitcoin Network)]
-    TargetWebsite[Target Website / Internet]
+    TargetWebsite[Target Website]
 
     User --> |Sends Requests| ProxyServer
     User --> |Buys Credits| PaymentGateway
@@ -92,7 +92,7 @@ $$
 S = w_L \cdot L + w_R \cdot R
 $$
 
-Where $w_L = 60\%$ , $w_R = 40\%$
+Where $w_L =$ 60% , $w_R = $40%
 
 ### Self-host a Server Node
 
@@ -111,9 +111,9 @@ See [Global Architecture](#global-architecture) for a high-level overview of the
 
 ```mermaid
 sequenceDiagram
-    participant SOCKS5_Client as SOCKS5 Client (User)
-    participant Proxy_Server as Proxy Server
-    participant Proxy_Client as Client Node
+    participant SOCKS5_Client as User
+    participant Proxy_Server as Server
+    participant Proxy_Client as Node
     participant Internet as Internet
 
     SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request
@@ -129,9 +129,3 @@ sequenceDiagram
 Want to buy proxy access from our network for web-scraping?
 
 Join our [Discord server](https://discord.gg/ZqdvQkSEc7) and create a ticket.
-
-
-[//]: # (### Some links)
-
-[//]: # ()
-[//]: # (- [Discord]&#40;https://discord.gg/ZqdvQkSEc7&#41;)
