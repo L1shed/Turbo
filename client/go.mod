@@ -6,7 +6,6 @@ toolchain go1.23.4
 
 require (
 	github.com/getlantern/systray v1.2.2
-	github.com/gorilla/websocket v1.5.3
 	github.com/quic-go/quic-go v0.51.0
 )
 

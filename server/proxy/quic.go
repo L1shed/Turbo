@@ -7,12 +7,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"server/proxy/socks"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/quic-go/quic-go"
 )
+
+type Message struct {
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+	Host   string `json:"host,omitempty"`
+	Port   int    `json:"port,omitempty"`
+	Data   string `json:"data,omitempty"`
+	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
 
 var (
 	QuicClients  = make(map[string]*QuicClient)
@@ -26,7 +37,7 @@ type QuicClient struct {
 	conn       quic.Connection
 	stream     quic.Stream
 	mutex      sync.Mutex
-	socksConns map[string]*SocksConn
+	socksConns map[string]*socks.SocksConn
 	socksMutex sync.Mutex
 	respChans  map[string]chan Message
 	respMutex  sync.Mutex
@@ -80,7 +91,7 @@ func handleQuicConnection(conn quic.Connection) {
 		id:         clientID,
 		conn:       conn,
 		stream:     stream,
-		socksConns: make(map[string]*SocksConn),
+		socksConns: make(map[string]*socks.SocksConn),
 		respChans:  make(map[string]chan Message),
 		Metrics: &Metrics{
 			Reliability: 0.7,
@@ -132,14 +143,14 @@ func quicReader(client *QuicClient) {
 				if data, err := base64.StdEncoding.DecodeString(msg.Data); err == nil {
 					dataSize := uint64(len(data))
 					atomic.AddUint64(&client.Stats.BytesReceived, dataSize)
-					sc.dataChan <- data
+					sc.DataChan <- data
 				}
 			}
 			client.socksMutex.Unlock()
 		case "close":
 			client.socksMutex.Lock()
 			if sc, ok := client.socksConns[msg.ID]; ok {
-				sc.conn.Close()
+				sc.Conn.Close()
 				delete(client.socksConns, msg.ID)
 			}
 			client.socksMutex.Unlock()

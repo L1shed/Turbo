@@ -73,12 +73,12 @@ In fact, you can run several nodes on different devices/IPs with the same wallet
 
 ### Reward
 
-Reward is `$1.00` per GB shared, that may seem low but the network is small so the handled bandwidth is high.
+Base reward is `$0.10` per GB shared (bonuses if god connection quality). That may seem low but the network is small so the handled bandwidth per node is high.
 
-For example, a node shares 0.1 GB/hour of bandwidth.
-At the current price rate we can expect $73.2/month per device if running 24/7.
+For example, a node shares 0.2 GB/hour of bandwidth.
+At the current price rate we get at least $14.64/month per device if running 24/7.
 
-The reward is paid in Bitcoin every day at 00:00 UTC (only if reward > $5 in BTC).
+The reward is paid every day at 00:00 UTC (only if reward > $2).
 
 ### Score calculation
 

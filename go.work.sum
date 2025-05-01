@@ -54,6 +54,7 @@ github.com/gogo/protobuf v1.1.1 h1:72R+M5VuhED/KujmZVcIquuo8mBgX4oVda//DQb3PXo=
 github.com/golang/protobuf v1.3.2-0.20190517061210-b285ee9cfc6c h1:zqAKixg3cTcIasAMJV+EcfVbWwLpOZ7LeoWJvcuD/5Q=
 github.com/golang/snappy v0.0.1 h1:Qgr9rKW7uDUkrbSmQeiDsGa8SjGyCOGtuasMWwvp2P4=
 github.com/google/go-cmp v0.3.1 h1:Xye71clBPdm5HgqGwUkwhbynsUJZhDbS20FvLhQ2izg=
+github.com/gorilla/websocket v1.4.1-0.20190629185528-ae1634f6a989 h1:giknQ4mEuDFmmHSrGcbargOuLHQGtywqo4mheITex54=
 github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277 h1:E0whKxgp2ojts0FDgUA8dl62bmH0LxKanMoBr6MDTDM=
 github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad h1:eMxs9EL0PvIGS9TTtxg4R+JxuPGav82J8rA+GFnY7po=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
