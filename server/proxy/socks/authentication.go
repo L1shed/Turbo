@@ -7,57 +7,69 @@ import (
 	"io"
 	"net"
 	"server/database"
+	"strings"
 )
 
-func Authenticate(conn net.Conn) (bool, string, error) {
+func Authenticate(conn net.Conn) (bool, map[string]string, error) {
+	params := make(map[string]string)
+
 	// Read auth version (must be 0x01)
 	header := make([]byte, 1)
 	if _, err := io.ReadFull(conn, header); err != nil {
-		return false, "", err
+		return false, nil, err
 	}
 
 	if header[0] != 0x01 {
-		return false, "", errors.New("unsupported auth version")
+		return false, nil, errors.New("unsupported auth version")
 	}
 
 	userLenBuf := make([]byte, 1)
 	if _, err := io.ReadFull(conn, userLenBuf); err != nil {
-		return false, "", err
+		return false, nil, err
 	}
 	userLen := userLenBuf[0]
 
 	userBuf := make([]byte, userLen)
 	if _, err := io.ReadFull(conn, userBuf); err != nil {
-		return false, "", err
+		return false, nil, err
 	}
 	username := string(userBuf)
 
 	passLenBuf := make([]byte, 1)
 	if _, err := io.ReadFull(conn, passLenBuf); err != nil {
-		return false, "", err
+		return false, nil, err
 	}
 	passLen := passLenBuf[0]
 
 	passBuf := make([]byte, passLen)
 	if _, err := io.ReadFull(conn, passBuf); err != nil {
-		return false, "", err
+		return false, nil, err
 	}
-	//password := string(passBuf)
+	passwordWithParams := string(passBuf)
 
-	if true {
-		conn.Write([]byte{0x01, SuccessReply})
-		return true, "usser_test", nil
+	// Separate actual password from parameters
+	actualPassword := passwordWithParams
+	if idx := strings.Index(passwordWithParams, "_"); idx != -1 {
+		actualPassword = passwordWithParams[:idx]
+		paramString := passwordWithParams[idx+1:]
+		pairs := strings.Split(paramString, "_")
+		for _, pair := range pairs {
+			if kv := strings.SplitN(pair, "-", 2); len(kv) == 2 {
+				params[kv[0]] = kv[1]
+			}
+		}
 	}
 
 	storedHash, err := database.Rdb.HGet(context.Background(), "user:"+username, "password").Result()
-	err2 := bcrypt.CompareHashAndPassword([]byte(storedHash), passBuf)
+	err2 := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(actualPassword))
 
 	// Authentication response: version 0x01 + status
 	if err != nil || err2 != nil {
 		conn.Write([]byte{0x01, GeneralFailure})
-		return false, "", errors.New("authentication failed")
+		return false, nil, errors.New("authentication failed")
 	}
 
 	conn.Write([]byte{0x01, SuccessReply})
-	return true, username, nil
+
+	return true, params, nil
 }
