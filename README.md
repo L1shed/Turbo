@@ -12,8 +12,9 @@
 3. [x] Redis Auth (proxy logins + GB credits)
 4. [ ] ~~Chrome Extension for client~~
 5. [ ] Automatic Bitcoin rewards
+6. [ ] LLM Data Extraction with Cuelang
 
-### Global architecture
+## Global architecture
 
 ```mermaid
 flowchart TD
@@ -124,6 +125,8 @@ sequenceDiagram
 
 ## Buy Bandwidth
 
-Want to buy proxy access from our network for web-scraping?
+Find my Discord on my GitHub profile and DM me.
 
-Join our [Discord server](https://discord.gg/ZqdvQkSEc7) and create a ticket.
+[//]: # (Want to buy proxy access from our network for web-scraping?)
+
+[//]: # (Join our [Discord server]&#40;https://discord.gg/ZqdvQkSEc7&#41; and create a ticket.)
