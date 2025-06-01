@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var templates = template.Must(template.ParseFiles("server/templates/stats.html"))
+var templates, _ = template.ParseFiles("./templates/stats.html")
 
 type ClientData struct {
 	ID              string
@@ -49,12 +49,12 @@ func getClientData(id string, client *proxy.QuicClient) ClientData {
 		TotalBytes:      formatBytes(totalBytes),
 		Ping:            fmt.Sprintf("%.1f ms", client.Metrics.Latency),
 		Score:           fmt.Sprintf("%.0f/100", client.Metrics.Score),
-		EstimatedReward: fmt.Sprintf("$%.4f", float64(totalBytes)/(1024*1024*1024)/0.01), // TODO: proper reward calculation
+		EstimatedReward: fmt.Sprintf("$%.4f", float64(totalBytes)/(1024*1024*1024)/0.01), //0. TODO: proper reward calculation
 	}
 }
 
 func StatsHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: protect from online connections
+	// TODO: isolate from online connections
 
 	address := r.URL.Query().Get("address")
 

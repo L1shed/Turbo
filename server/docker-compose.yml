@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build: .
@@ -17,7 +15,7 @@ services:
     image: redis:7
     container_name: redis-server
     volumes:
-      - ./redis-data:/data
+      - .logs/redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
     networks:
       - backend

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"server/data"
 	"server/proxy/socks"
 	"sync/atomic"
 	"time"
@@ -56,6 +57,10 @@ func HandleSocksConn(conn net.Conn) {
 			ID:       id,
 			Conn:     conn,
 			DataChan: dataChan,
+			Metrics: socks.ConnectionMetrics{
+				Timestamp: time.Now().Unix(),
+				Protocol:  conn.RemoteAddr().Network(),
+			},
 		}
 
 		client.socksMutex.Lock()
@@ -90,7 +95,6 @@ func HandleSocksConn(conn net.Conn) {
 		var respMsg Message
 		select {
 		case respMsg = <-respChan:
-			// Response received within timeout
 			if respMsg.Status == "success" {
 				success = true
 
@@ -161,6 +165,7 @@ func (c *QuicClient) HandleSocksConnection(sc *socks.SocksConn) {
 				}
 
 				atomic.AddUint64(&c.Stats.BytesSent, uint64(n))
+				atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
 			}
 		}
 	}()
@@ -177,6 +182,7 @@ func relayFromSocksToQuic(client *QuicClient, sc *socks.SocksConn, id string) {
 
 		dataSize := uint64(n)
 		atomic.AddUint64(&client.Stats.BytesSent, dataSize)
+		atomic.AddUint64(&sc.Metrics.BytesSent, dataSize)
 
 		data := base64.StdEncoding.EncodeToString(buf[:n])
 		msg := Message{Type: "data", ID: id, Data: data}
@@ -203,8 +209,11 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	}
 
 	c.socksMutex.Lock()
+	sc := c.socksConns[id]
 	delete(c.socksConns, id)
 	c.socksMutex.Unlock()
+
+	data.LogConnection(sc)
 
 	atomic.AddInt32(&c.Stats.ActiveConns, -1)
 }

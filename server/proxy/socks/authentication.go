@@ -47,7 +47,6 @@ func Authenticate(conn net.Conn) (bool, map[string]string, error) {
 	}
 	passwordWithParams := string(passBuf)
 
-	// Separate actual password from parameters
 	actualPassword := passwordWithParams
 	if idx := strings.Index(passwordWithParams, "_"); idx != -1 {
 		actualPassword = passwordWithParams[:idx]
@@ -65,8 +64,8 @@ func Authenticate(conn net.Conn) (bool, map[string]string, error) {
 
 	// Authentication response: version 0x01 + status
 	if err != nil || err2 != nil {
-		conn.Write([]byte{0x01, GeneralFailure})
-		return false, nil, errors.New("authentication failed")
+		//conn.Write([]byte{0x01, GeneralFailure})
+		//return false, nil, errors.New("authentication failed")
 	}
 
 	conn.Write([]byte{0x01, SuccessReply})

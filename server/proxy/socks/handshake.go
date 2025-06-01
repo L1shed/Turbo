@@ -109,7 +109,6 @@ func HandleSocksHandshake(conn net.Conn) (string, int, map[string]string, error)
 		return "", 0, nil, errors.New("unsupported address type")
 	}
 
-	// Read port
 	portBytes := make([]byte, 2)
 	if _, err := io.ReadFull(conn, portBytes); err != nil {
 		return "", 0, nil, err

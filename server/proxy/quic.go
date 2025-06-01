@@ -143,6 +143,7 @@ func quicReader(client *QuicClient) {
 				if data, err := base64.StdEncoding.DecodeString(msg.Data); err == nil {
 					dataSize := uint64(len(data))
 					atomic.AddUint64(&client.Stats.BytesReceived, dataSize)
+					atomic.AddUint64(&sc.Metrics.BytesReceived, dataSize)
 					sc.DataChan <- data
 				}
 			}

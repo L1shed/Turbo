@@ -11,8 +11,8 @@ var templates = make(map[string]*template.Template)
 func initTemplates(names ...string) {
 	for _, name := range names {
 		tmpl, err := template.ParseFiles(
-			"server/templates/payment/layout.html",
-			"server/templates/payment/"+name+".html",
+			"./templates/payment/layout.html",
+			"./templates/payment/"+name+".html",
 		)
 		if err != nil {
 			log.Println("Template initiating error:", err)
