@@ -1,6 +1,6 @@
 # Turbo
 
-> **Fastest** and **cheapest** ~~decentralized~~ residential Proxy network.
+> **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
 
 > [!NOTE]
 > This project is still at _Proof of Concept_ stage
@@ -12,7 +12,9 @@
 3. [x] Redis Auth (proxy logins + GB credits)
 4. [ ] ~~Chrome Extension for client~~
 5. [ ] Automatic Bitcoin rewards
-6. [ ] LLM Data Extraction with Cuelang
+6. [ ] Client public dashboard
+
+[//]: # (7. [ ] LLM Data Extraction with Cuelang)
 
 ## Global architecture
 
@@ -99,7 +101,7 @@ You're free to operate your own server for commercial use.
 
 Run server docker image and connect clients.
 
-See clients stats at https://localhost:8080/stats
+For more information, see [Setting Up Development Environment](CONTRIBUTING.md#setting-up-development-environment)
 
 
 ## System Design
@@ -125,8 +127,13 @@ sequenceDiagram
 
 ## Buy Bandwidth
 
-Find my Discord on my GitHub profile and DM me.
+Want to buy proxy access from our network for web-scraping?
 
-[//]: # (Want to buy proxy access from our network for web-scraping?)
+* [**Telegram channel**](https://t.me/node_turbo)
+* **Discord**: Find my Discord ID on my GitHub user profile page and DM me.
 
-[//]: # (Join our [Discord server]&#40;https://discord.gg/ZqdvQkSEc7&#41; and create a ticket.)
+[//]: # (Join our [**Discord server**]&#40;https://discord.gg/ZqdvQkSEc7&#41; and create a ticket.)
+
+## Data Privacy
+
+We log anonymous data for each SOCKS5 connection to train AI models to detect abnormal and malicious traffic.
