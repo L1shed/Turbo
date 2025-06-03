@@ -35,7 +35,7 @@ You can send test SOCKS requests to server like this:
 curl -x socks5h://username:password@localhost:1080 https://example.com
 ```
 
-Access nodes stats on server dashboard at `http://localhost:8080/stats`
+Access nodes stats on server dashboard at http://localhost:8080/stats
 
 ## How to Contribute
 

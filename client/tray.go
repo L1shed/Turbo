@@ -1,17 +1,18 @@
 package main
 
 import (
-	"fmt"
+	_ "embed"
 	"github.com/getlantern/systray"
 	"log"
-	"os"
 	"os/exec"
 	"runtime"
 )
 
+//go:embed assets/icon.ico
+var iconData []byte // Embed an icon file (Windows .ico)
+
 func setupTray() {
-	icon := getIcon("assets/icon.ico")
-	systray.SetTemplateIcon(icon, icon)
+	systray.SetTemplateIcon(iconData, iconData)
 	systray.SetTooltip("Turbo running")
 
 	dashboard := systray.AddMenuItem("Dashboard", "Open dashboard")
@@ -31,14 +32,6 @@ func setupTray() {
 			}
 		}
 	}()
-}
-
-func getIcon(s string) []byte {
-	b, err := os.ReadFile(s)
-	if err != nil {
-		fmt.Print(err)
-	}
-	return b
 }
 
 func open(url string) error {

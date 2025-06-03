@@ -3,7 +3,7 @@
 > **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
 
 > [!NOTE]
-> This project is still at _Proof of Concept_ stage
+> This project is at _Experimental_ stage
 
 ## Features
 
@@ -12,7 +12,7 @@
 3. [x] Redis Auth (proxy logins + GB credits)
 4. [ ] ~~Chrome Extension for client~~
 5. [ ] Automatic Bitcoin rewards
-6. [ ] Client public dashboard
+6. [ ] AI abnormal traffic detection model
 
 [//]: # (7. [ ] LLM Data Extraction with Cuelang)
 
@@ -76,7 +76,7 @@ In fact, you can run several nodes on different devices/IPs with the same wallet
 
 ### Reward
 
-Base reward is `$0.10` per GB shared (bonuses if god connection quality). That may seem low but the network is small so the handled bandwidth per node is high.
+Base reward is `$0.10` per GB shared (bonuses if stable connection quality). That may seem low but the network is small so the handled bandwidth per node is high.
 
 For example, a node shares 0.2 GB/hour of bandwidth.
 At the current price rate we get at least $14.64/month per device if running 24/7.
