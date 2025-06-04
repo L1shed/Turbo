@@ -5,6 +5,8 @@ import (
 	"net"
 )
 
+const Website = "http://localhost:3000"
+
 type Message struct {
 	Type   string `json:"type"`
 	ID     string `json:"id"`

@@ -8,7 +8,7 @@ import (
 
 const (
 	listenAddr    = "127.0.0.1:5520"
-	allowedOrigin = "https://turbo.r-o-o-t.net"
+	allowedOrigin = Website
 )
 
 // gets data from website through a local POST request
