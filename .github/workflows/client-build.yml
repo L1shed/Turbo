@@ -18,10 +18,6 @@ jobs:
       matrix:
         goos: [linux, windows, darwin]
         goarch: [amd64, arm64]
-        exclude:
-          # For example,
-          # - goos: windows
-          #   goarch: arm64
         include:
           - goos: windows
             goarch: amd64
