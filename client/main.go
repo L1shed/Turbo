@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"github.com/getlantern/systray"
 	"net"
 )
@@ -26,7 +25,7 @@ var (
 )
 
 func main() {
-	bitcoinAddr = flag.String("address", "undefined", "Send automatic Bitcoin rewards")
+	listenWallet()
 
 	systray.Run(onReady, nil)
 }
