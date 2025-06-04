@@ -1,0 +1,91 @@
+name: Build Client
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          # For example,
+          # - goos: windows
+          #   goarch: arm64
+        include:
+          - goos: windows
+            goarch: amd64
+            output_name: Turbo.exe
+            asset_name_suffix: windows-amd64.exe
+          - goos: windows
+            goarch: arm64
+            output_name: Turbo.exe
+            asset_name_suffix: windows-arm64.exe
+          - goos: linux
+            goarch: amd64
+            output_name: turbo-client
+            asset_name_suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            output_name: turbo-client
+            asset_name_suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            output_name: turbo-client
+            asset_name_suffix: macos-amd64
+          - goos: darwin
+            goarch: arm64
+            output_name: turbo-client
+            asset_name_suffix: macos-arm64
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21' # Specify your Go version
+
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        cd client
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          go build -ldflags="-H windowsgui" -o build/${{ matrix.output_name }}
+        else
+          go build -o build/${{ matrix.output_name }}
+        fi
+      working-directory: ${{ github.workspace }}
+
+
+    - name: Upload artifact for manual testing
+      if: github.event_name != 'release'
+      uses: actions/upload-artifact@v3
+      with:
+        name: turbo-client-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: client/build/${{ matrix.output_name }}
+
+    - name: Upload Release Asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./client/build/${{ matrix.output_name }}
+        asset_name: turbo-client-${{ matrix.asset_name_suffix }}
+        asset_content_type: application/octet-stream
+
