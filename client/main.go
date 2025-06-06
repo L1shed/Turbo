@@ -1,10 +1,13 @@
 package main
 
 import (
-	"flag"
+	"client/platform"
 	"github.com/getlantern/systray"
+	"github.com/opentracing/opentracing-go/log"
 	"net"
 )
+
+const Website = "localhost:3000"
 
 type Message struct {
 	Type   string `json:"type"`
@@ -21,14 +24,10 @@ type Connection struct {
 	dataChan chan []byte
 }
 
-var (
-	bitcoinAddr *string
-)
-
 func main() {
-	bitcoinAddr = flag.String("address", "undefined", "Send automatic Bitcoin rewards")
-
 	systray.Run(onReady, nil)
+
+	log.Error(platform.EnableAutoStart())
 }
 
 func onReady() {

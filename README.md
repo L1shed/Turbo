@@ -3,7 +3,7 @@
 > **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
 
 > [!NOTE]
-> This project is at _Experimental_ stage
+> This project is at **Experimental** stage
 
 ## Features
 
