@@ -63,8 +63,6 @@ func connectQuicServer() {
 		quicMutex.Unlock()
 		connectionAttempts = 0
 
-		sendMessage(&Message{Type: "address", ID: *bitcoinAddr})
-
 		quicReader(stream)
 
 		log.Println("QUIC connection closed, reconnecting...")

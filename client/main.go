@@ -1,7 +1,9 @@
 package main
 
 import (
+	"client/platform"
 	"github.com/getlantern/systray"
+	"github.com/opentracing/opentracing-go/log"
 	"net"
 )
 
@@ -22,14 +24,12 @@ type Connection struct {
 	dataChan chan []byte
 }
 
-var (
-	bitcoinAddr *string
-)
-
 func main() {
 	listenWallet()
 
 	systray.Run(onReady, nil)
+
+	log.Error(platform.EnableAutoStart())
 }
 
 func onReady() {
