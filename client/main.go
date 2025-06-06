@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-const Website = "localhost:3000"
+const Website = "http://localhost:3000"
 
 type Message struct {
 	Type   string `json:"type"`
@@ -25,6 +25,8 @@ type Connection struct {
 }
 
 func main() {
+	listenWallet()
+
 	systray.Run(onReady, nil)
 
 	log.Error(platform.EnableAutoStart())

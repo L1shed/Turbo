@@ -40,6 +40,7 @@ func connectQuicServer() {
 			}
 
 			log.Println("Failed to connect to QUIC server. Retrying...")
+			log.Println(err)
 			time.Sleep(retryDelay)
 			connectionAttempts++
 			continue
