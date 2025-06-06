@@ -3,7 +3,7 @@ package main
 import (
 	"client/platform"
 	"github.com/getlantern/systray"
-	"github.com/opentracing/opentracing-go/log"
+	"log"
 	"net"
 )
 
@@ -25,8 +25,6 @@ type Connection struct {
 }
 
 func main() {
-	listenWallet()
-
 	systray.Run(onReady, nil)
 
 	log.Error(platform.EnableAutoStart())

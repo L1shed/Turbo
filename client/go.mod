@@ -4,7 +4,6 @@ go 1.23.4
 
 require (
 	github.com/getlantern/systray v1.2.2
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/quic-go/quic-go v0.52.0
 	golang.org/x/sys v0.33.0
 )

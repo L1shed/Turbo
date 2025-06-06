@@ -46,7 +46,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -66,22 +66,18 @@ jobs:
         fi
       working-directory: ${{ github.workspace }}
 
-
     - name: Upload artifact for manual testing
       if: github.event_name != 'release'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: turbo-client-${{ matrix.goos }}-${{ matrix.goarch }}
+        name: Turbo_${{ matrix.goos }}-${{ matrix.goarch }}
         path: client/build/${{ matrix.output_name }}
 
     - name: Upload Release Asset
       if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./client/build/${{ matrix.output_name }}
+        name: Turbo_${{ matrix.asset_name_suffix }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./client/build/${{ matrix.output_name }}
-        asset_name: turbo-client-${{ matrix.asset_name_suffix }}
-        asset_content_type: application/octet-stream
-
