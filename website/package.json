@@ -11,6 +11,8 @@
   "dependencies": {
     "@prisma/client": "^6.8.2",
     "@prisma/extension-accelerate": "^2.0.1",
+    "@rainbow-me/rainbowkit": "^2.2.6",
+    "@tanstack/react-query": "^5.80.6",
     "@wagmi/connectors": "^5.8.4",
     "@wagmi/core": "^2.17.2",
     "@web3modal/wagmi": "^5.1.11",
@@ -23,7 +25,7 @@
     "recharts": "^2.15.3",
     "tailwind-merge": "^3.3.0",
     "viem": "^2.30.6",
-    "wagmi": "^2.15.5"
+    "wagmi": "^2.15.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
