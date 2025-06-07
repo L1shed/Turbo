@@ -2,8 +2,8 @@
 
 > **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
 
-> [!NOTE]
-> This project is at **Experimental** stage
+> [!WARNING]
+> This project is at **experimental** stage
 
 ## Features
 
@@ -11,8 +11,7 @@
 2. [x] Crypto payment gateway
 3. [x] Redis Auth (proxy logins + GB credits)
 4. [ ] ~~Chrome Extension for client~~
-5. [ ] Automatic Bitcoin rewards
-6. [ ] AI abnormal traffic detection model
+5. [ ] AI abnormal traffic detection model
 
 [//]: # (7. [ ] LLM Data Extraction with Cuelang)
 
@@ -25,8 +24,8 @@ flowchart TD
     Redis[(Redis Database)]
     ClientNode[Client Node]
     NodeRunner[Node Runner]
-    PaymentGateway[Crypto Payment Gateway]
-    BitcoinNetwork[(Bitcoin Network)]
+    PaymentGateway[Payment Gateway]
+    BitcoinNetwork[(Crypto Blockchain)]
     TargetWebsite[Target Website]
 
     User --> |Sends Requests| ProxyServer
@@ -41,7 +40,7 @@ flowchart TD
     PaymentGateway --> |Processes Payments| BitcoinNetwork
     PaymentGateway --> |Updates Credits In| Redis
 
-    BitcoinNetwork --> |Sends Rewards in BTC| NodeRunner
+    BitcoinNetwork --> |Sends Rewards| NodeRunner
 ```
 
 ## Monetization

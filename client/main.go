@@ -27,7 +27,7 @@ type Connection struct {
 func main() {
 	systray.Run(onReady, nil)
 
-	log.Error(platform.EnableAutoStart())
+	log.Println(platform.EnableAutoStart())
 }
 
 func onReady() {
