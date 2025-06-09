@@ -3,7 +3,7 @@
 > **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
 
 > [!WARNING]
-> This project is at **experimental** stage
+> This project is in the **experimental** stage
 
 ## Features
 
@@ -19,11 +19,11 @@
 
 ```mermaid
 flowchart TD
-    User[User]
+    User(User)
     ProxyServer[Proxy Server]
     Redis[(Redis Database)]
     ClientNode[Client Node]
-    NodeRunner[Node Runner]
+    NodeRunner(Node Runner)
     PaymentGateway[Payment Gateway]
     BitcoinNetwork[(Crypto Blockchain)]
     TargetWebsite[Target Website]

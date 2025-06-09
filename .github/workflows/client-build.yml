@@ -15,69 +15,119 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
         include:
-          - goos: windows
+          - os: windows-latest
+            goos: windows
             goarch: amd64
             output_name: Turbo.exe
-            asset_name_suffix: windows-amd64.exe
-          - goos: windows
-            goarch: arm64
-            output_name: Turbo.exe
-            asset_name_suffix: windows-arm64.exe
-          - goos: linux
-            goarch: amd64
-            output_name: turbo-client
-            asset_name_suffix: linux-amd64
-          - goos: linux
-            goarch: arm64
-            output_name: turbo-client
-            asset_name_suffix: linux-arm64
-          - goos: darwin
-            goarch: amd64
-            output_name: turbo-client
-            asset_name_suffix: macos-amd64
-          - goos: darwin
-            goarch: arm64
-            output_name: turbo-client
-            asset_name_suffix: macos-arm64
+            asset_name: Turbo_windows-amd64.exe
 
-    runs-on: ubuntu-latest
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            output_name: Turbo.exe
+            asset_name: Turbo_windows-arm64.exe
+
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            output_name: turbo-client
+            asset_name: Turbo_linux-amd64
+
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            output_name: turbo-client
+            asset_name: Turbo_linux-arm64
+
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            output_name: Turbo
+            asset_name: Turbo_macos-amd64.dmg
+
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            output_name: Turbo
+            asset_name: Turbo_macos-arm64.dmg
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.23.4'
+        check-latest: true
+        cache: true
 
-    - name: Build
+    - name: Build Windows
+      if: matrix.goos == 'windows'
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
         cd client
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          go build -ldflags="-H windowsgui" -o build/${{ matrix.output_name }}
-        else
-          go build -o build/${{ matrix.output_name }}
-        fi
-      working-directory: ${{ github.workspace }}
+        go build -ldflags="-H windowsgui -s -w" -o build/${{ matrix.output_name }}
+        mkdir -p dist
+        cp build/${{ matrix.output_name }} dist/${{ matrix.output_name }}
+        cp assets/icon.ico dist/
 
-    - name: Upload artifact for manual testing
-      if: github.event_name != 'release'
+    - name: Build Linux
+      if: matrix.goos == 'linux'
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        cd client
+        go build -ldflags="-s -w" -o build/${{ matrix.output_name }}
+        mkdir -p dist
+        cp build/${{ matrix.output_name }} dist/
+
+    - name: Build macOS
+      if: matrix.goos == 'darwin'
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        cd client
+        go build -ldflags="-s -w" -o build/${{ matrix.output_name }}
+        
+        # Create DMG
+        brew install create-dmg || true
+        mkdir -p dist
+        create-dmg \
+          --volname "Turbo Installer" \
+          --volicon "assets/icon.icns" \
+          --window-pos 200 120 \
+          --window-size 600 400 \
+          --icon-size 100 \
+          --icon "Turbo.app" 200 190 \
+          --hide-extension "Turbo.app" \
+          --app-drop-link 400 190 \
+          "dist/${{ matrix.asset_name }}" \
+          "build/Turbo.app" || cp -r build/Turbo.app "dist/Turbo.app"
+
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Turbo_${{ matrix.goos }}-${{ matrix.goarch }}
-        path: client/build/${{ matrix.output_name }}
+        name: ${{ matrix.asset_name }}
+        path: |
+          client/dist/${{ matrix.asset_name }}
+          client/dist/${{ matrix.output_name }}
+          client/dist/Turbo.app
+        if-no-files-found: warn
 
     - name: Upload Release Asset
       if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
-        files: ./client/build/${{ matrix.output_name }}
-        name: Turbo_${{ matrix.asset_name_suffix }}
+        files: client/dist/${{ matrix.asset_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
