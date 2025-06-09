@@ -53,12 +53,12 @@ Start earning today by running client node in the background.
 
 #### Compatibility
 
-| Platform | Supported    |
-|----------|--------------|
-| Windows  | ✅            |
-| Linux    | Console only |
-| macOS    | ✅            |
-| Mobile   | ❌            |
+| Platform | Supported |
+|----------|-----------|
+| Windows  | ✅         |
+| Linux    | ✅         |
+| macOS    | ✅         |
+| Mobile   | ❌         |
 
 #### Installation
 
