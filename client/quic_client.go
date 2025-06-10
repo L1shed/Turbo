@@ -47,7 +47,6 @@ func connectQuicServer() {
 		}
 		log.Println("Connected to QUIC server")
 
-		// Open a new bidirectional stream
 		stream, err := conn.OpenStreamSync(ctx)
 		if err != nil {
 			log.Println("Failed to open QUIC stream:", err)
