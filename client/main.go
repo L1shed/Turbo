@@ -1,37 +1,27 @@
 package main
 
 import (
+	"client/conn"
 	"client/platform"
 	"github.com/getlantern/systray"
 	"log"
-	"net"
 )
 
-const Website = "http://localhost:3000"
-
-type Message struct {
-	Type   string `json:"type"`
-	ID     string `json:"id"`
-	Host   string `json:"host,omitempty"`
-	Port   int    `json:"port,omitempty"`
-	Data   string `json:"data,omitempty"`
-	Status string `json:"status,omitempty"`
-	Error  string `json:"error,omitempty"`
-}
-
-type Connection struct {
-	conn     net.Conn
-	dataChan chan []byte
-}
+const (
+	VERSION = "experimental"
+	WEBSITE = "http://localhost:3000"
+)
 
 func main() {
-	systray.Run(onReady, nil)
+	go conn.ListenWallet(WEBSITE)
 
 	log.Println(platform.EnableAutoStart())
+	systray.Run(onReady, nil)
+
 }
 
 func onReady() {
 	setupTray()
 
-	go connectQuicServer()
+	go conn.ConnectQuicServer()
 }

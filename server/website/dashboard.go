@@ -14,7 +14,7 @@ var templates, _ = template.ParseFiles("./templates/stats.html")
 
 type ClientData struct {
 	ID              string
-	BitcoinAddr     string
+	CryptoAddr      string
 	ActiveTime      string
 	ActiveConns     int32
 	BytesIn         string
@@ -41,7 +41,7 @@ func getClientData(id string, client *proxy.QuicClient) ClientData {
 
 	return ClientData{
 		ID:              id,
-		BitcoinAddr:     client.Stats.BitcoinAddr,
+		CryptoAddr:      client.Stats.CryptoAddr,
 		ActiveTime:      activeTime.String(),
 		ActiveConns:     activeConns,
 		BytesIn:         formatBytes(bytesIn),
@@ -70,7 +70,7 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 	if address != "" {
 		// Search for clients with specified Bitcoin address
 		for id, client := range proxy.QuicClients {
-			if client.Stats.BitcoinAddr == address {
+			if client.Stats.CryptoAddr == address {
 				viewData.Clients = append(viewData.Clients, getClientData(id, client))
 			}
 		}

@@ -72,11 +72,10 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
-        cd client
-        go build -ldflags="-H windowsgui -s -w" -o build/${{ matrix.output_name }}
         mkdir -p dist
-        cp build/${{ matrix.output_name }} dist/${{ matrix.output_name }}
-        cp assets/icon.ico dist/
+        cd client
+        go build -ldflags="-H windowsgui -s -w" -o ../dist/${{ matrix.output_name }}
+#        cp assets/icon.ico dist/
 
     - name: Build Linux
       if: matrix.goos == 'linux'
@@ -87,10 +86,9 @@ jobs:
         sudo apt update
         sudo apt-get install gcc libgtk-3-dev libayatana-appindicator3-dev
         
-        cd client
-        go build -ldflags="-s -w" -o build/${{ matrix.output_name }}
         mkdir -p dist
-        cp build/${{ matrix.output_name }} dist/
+        cd client
+        go build -ldflags="-s -w" -o ../dist/${{ matrix.output_name }}
 
     - name: Build macOS
       if: matrix.goos == 'darwin'
@@ -98,17 +96,17 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
+        mkdir -p dist
         cd client
-        go build -ldflags="-s -w" -o build/${{ matrix.output_name }}
+        go build -ldflags="-s -w" -o ../build/${{ matrix.output_name }}
         
-        mkdir -p build/Turbo.app/Contents/MacOS
-        cp build/${{ matrix.output_name }} build/Turbo.app/Contents/MacOS/Turbo
+        cp build/${{ matrix.output_name }} ../build/Turbo.app/Contents/MacOS/Turbo
         
         brew install create-dmg || true
         mkdir -p dist
         create-dmg \
           --volname "Turbo Installer" \
-          --volicon "assets/icon.icns" \
+          --volicon "../build/assets/icon.icns" \
           --window-pos 200 120 \
           --window-size 600 400 \
           --icon-size 100 \
@@ -116,22 +114,22 @@ jobs:
           --hide-extension "Turbo.app" \
           --app-drop-link 400 190 \
           "dist/${{ matrix.asset_name }}" \
-          "build/Turbo.app" || cp -r build/Turbo.app "dist/Turbo.app"
+          "../build/Turbo.app" || cp -r ../build/Turbo.app "../dist/Turbo.app"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
         path: |
-          client/dist/${{ matrix.asset_name }}
-          client/dist/${{ matrix.output_name }}
-          client/dist/Turbo.app
+          dist/${{ matrix.asset_name }}
+          dist/${{ matrix.output_name }}
+          dist/Turbo.app
         if-no-files-found: warn
 
     - name: Upload Release Asset
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
-        files: client/dist/${{ matrix.asset_name }}
+        files: dist/${{ matrix.asset_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

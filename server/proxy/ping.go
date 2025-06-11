@@ -24,7 +24,6 @@ func ReportPing() {
 			err := client.SendMessage(Message{
 				Type: "ping",
 			})
-
 			if err != nil {
 				log.Printf("Failed to send ping: %v", err)
 				return

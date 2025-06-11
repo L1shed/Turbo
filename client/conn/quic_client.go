@@ -1,4 +1,4 @@
-package main
+package conn
 
 import (
 	"context"
@@ -14,6 +14,21 @@ import (
 	"github.com/quic-go/quic-go"
 )
 
+type Message struct {
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+	Host   string `json:"host,omitempty"`
+	Port   int    `json:"port,omitempty"`
+	Data   string `json:"data,omitempty"`
+	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
+type Connection struct {
+	conn     net.Conn
+	dataChan chan []byte
+}
+
 var (
 	quicConn    quic.Connection
 	quicStream  quic.Stream
@@ -22,7 +37,7 @@ var (
 	clientMutex sync.Mutex
 )
 
-func connectQuicServer() {
+func ConnectQuicServer() {
 	connectionAttempts := 0
 	retryDelay := time.Second * 4
 

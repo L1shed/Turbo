@@ -1,4 +1,4 @@
-package main
+package conn
 
 import (
 	"io"
@@ -7,19 +7,18 @@ import (
 )
 
 const (
-	listenAddr    = "127.0.0.1:5520"
-	allowedOrigin = Website
+	listenAddr = "127.0.0.1:5520"
 )
 
-// gets data from website through a local POST request
-func listenWallet() {
+// ListenWallet gets data from website through a local POST request
+func ListenWallet(allowedOrigin string) {
 	http.HandleFunc("/update-wallet", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 
-		log.Println(r.Header.Get("Origin"))
-
-		if r.Method != http.MethodPost {
-			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		origin := r.Header.Get("Origin")
+		if origin != allowedOrigin {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			log.Printf("Request from %s is not allowed (origin: %s)", r.RemoteAddr, origin)
 			return
 		}
 

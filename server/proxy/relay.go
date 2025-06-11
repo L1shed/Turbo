@@ -21,7 +21,7 @@ type ClientStats struct {
 	ActiveConns   int32
 	BytesSent     uint64
 	BytesReceived uint64
-	BitcoinAddr   string
+	CryptoAddr    string
 }
 
 func HandleSocksConn(conn net.Conn) {

@@ -22,7 +22,7 @@ func setupTray() {
 		for {
 			select {
 			case <-dashboard.ClickedCh:
-				err := open(Website)
+				err := open(WEBSITE)
 				if err != nil {
 					log.Println("Failed to open browser:", err)
 				}

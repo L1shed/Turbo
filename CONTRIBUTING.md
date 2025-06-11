@@ -47,13 +47,13 @@ Access nodes stats on server dashboard at http://localhost:8080/stats
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Reporting Issues
+### Reporting Issues
 
 - Use the GitHub issue tracker to report bugs
 - Include detailed steps to reproduce the issue
 - Specify your environment (OS, Go version, etc.)
 
-## Feature Requests
+### Feature Requests
 
 Feature requests are welcome! Please use the GitHub issue tracker and describe:
 - What the feature should do

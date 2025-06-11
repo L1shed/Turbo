@@ -83,8 +83,8 @@
 <h1>Client Statistics</h1>
 
 <form method="get">
-    <label for="address">Search by Bitcoin Address:</label>
-    <input type="text" id="address" name="address" value="{{.Address}}" placeholder="Enter Bitcoin Address">
+    <label for="address">Search by address:</label>
+    <input type="text" id="address" name="address" value="{{.Address}}" placeholder="Enter Crypto Address">
     <button type="submit">Search</button>
     {{if .Address}}
     <a href="/stats" class="clear-search">Clear Search</a>
@@ -94,7 +94,7 @@
 {{if .Address}}
 <h2>Results for: {{.Address}}</h2>
 {{if .NotFound}}
-<p class="not-found">No client found with Bitcoin address: {{.Address}}</p>
+<p class="not-found">No client found with address: {{.Address}}</p>
 {{end}}
 {{end}}
 
@@ -102,7 +102,7 @@
 <table>
     <tr>
         <th>Client</th>
-        <th>Bitcoin Address</th>
+        <th>Crypto Address</th>
         <th>Active Since</th>
         <th>Active Connections</th>
         <th>Bytes Received</th>
@@ -115,7 +115,7 @@
     {{range .Clients}}
     <tr>
         <td>{{.ID}}</td>
-        <td>{{.BitcoinAddr}}</td>
+        <td>{{.CryptoAddr}}</td>
         <td>{{.ActiveTime}}</td>
         <td>{{.ActiveConns}}</td>
         <td>{{.BytesIn}}</td>
