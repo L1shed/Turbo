@@ -1,0 +1,44 @@
+{
+  "name": "website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "@prisma/extension-accelerate": "^2.0.1",
+    "@rainbow-me/rainbowkit": "^2.2.6",
+    "@tanstack/react-query": "^5.80.6",
+    "@wagmi/connectors": "^5.8.4",
+    "@wagmi/core": "^2.17.2",
+    "@web3modal/wagmi": "^5.1.11",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.511.0",
+    "next": "15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^3.3.0",
+    "viem": "^2.30.6",
+    "wagmi": "^2.15.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3",
+    "prisma": "^6.8.2",
+    "tailwindcss": "^4",
+    "tsx": "^4.19.4",
+    "tw-animate-css": "^1.3.3",
+    "typescript": "^5"
+  }
+}

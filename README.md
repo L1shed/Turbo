@@ -1,139 +1,36 @@
-# Turbo
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-> **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
+## Getting Started
 
-> [!NOTE]
-> This project is still at _Proof of Concept_ stage
+First, run the development server:
 
-## Features
-
-1. [x] Client connection quality analysis
-2. [x] Crypto payment gateway
-3. [x] Redis Auth (proxy logins + GB credits)
-4. [ ] ~~Chrome Extension for client~~
-5. [ ] Automatic Bitcoin rewards
-6. [ ] Client public dashboard
-
-[//]: # (7. [ ] LLM Data Extraction with Cuelang)
-
-## Global architecture
-
-```mermaid
-flowchart TD
-    User[User]
-    ProxyServer[Proxy Server]
-    Redis[(Redis Database)]
-    ClientNode[Client Node]
-    NodeRunner[Node Runner]
-    PaymentGateway[Crypto Payment Gateway]
-    BitcoinNetwork[(Bitcoin Network)]
-    TargetWebsite[Target Website]
-
-    User --> |Sends Requests| ProxyServer
-    User --> |Buys Credits| PaymentGateway
-
-    ProxyServer --> |Uses for User Auth & Credits| Redis
-    ProxyServer <--> |QUIC Messaging| ClientNode
-
-    ClientNode --> |Processes Requests To| TargetWebsite
-    NodeRunner --> |Operates| ClientNode
-
-    PaymentGateway --> |Processes Payments| BitcoinNetwork
-    PaymentGateway --> |Updates Credits In| Redis
-
-    BitcoinNetwork --> |Sends Rewards in BTC| NodeRunner
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Monetization
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Run a Client Node
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Start earning today by running client node in the background.
+## Learn More
 
-#### Compatibility
+To learn more about Next.js, take a look at the following resources:
 
-| Platform | Supported    |
-|----------|--------------|
-| Windows  | ✅            |
-| Linux    | Console only |
-| macOS    | ✅            |
-| Mobile   | ❌            |
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-#### Installation
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- Download the [latest release](https://github.com/L1shed/Turbo/releases) for your platform.
-- Open the downloaded executable — a new icon will appear in your system tray.
-- Click on the icon and select **"Dashboard"**.
+## Deploy on Vercel
 
-![img.png](.github/assets/img.png)
-- A page will open where you can link your wallet address via **WalletConnect** or enter it manually.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-After that, you will be able to see your node(s) score, shared bandwidth and reward.
-
-In fact, you can run several nodes on different devices/IPs with the same wallet.
-
-### Reward
-
-Base reward is `$0.10` per GB shared (bonuses if god connection quality). That may seem low but the network is small so the handled bandwidth per node is high.
-
-For example, a node shares 0.2 GB/hour of bandwidth.
-At the current price rate we get at least $14.64/month per device if running 24/7.
-
-The reward is paid every day at 00:00 UTC (only if reward > $2).
-
-### Score calculation
-
-The score (up to 100) is based on two factors:
-- $L$: Latency, capped on a range from 10ms to 500ms
-- $R$: Reliability
-
-$$
-S = w_L \cdot L + w_R \cdot R
-$$
-
-Where $w_L =$ 60% , $w_R =$ 40%
-
-### Self-host a Server Node
-
-You're free to operate your own server for commercial use.
-
-Run server docker image and connect clients.
-
-For more information, see [Setting Up Development Environment](CONTRIBUTING.md#setting-up-development-environment)
-
-
-## System Design
-
-See [Global Architecture](#global-architecture) for a high-level overview of the system.
-
-### Traffic flow
-
-```mermaid
-sequenceDiagram
-    participant SOCKS5_Client as User
-    participant Proxy_Server as Server
-    participant Proxy_Client as Node
-    participant Internet as Internet
-
-    SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request
-    Proxy_Server->>Proxy_Client: 2. Forward request via QUIC
-    Proxy_Client->>Internet: 3. Process request & fetch data
-    Internet-->>Proxy_Client: 4. Return response
-    Proxy_Client-->>Proxy_Server: 5. Send data via QUIC
-    Proxy_Server-->>SOCKS5_Client: 6. Send back to SOCKS5 Client
-```
-
-## Buy Bandwidth
-
-Want to buy proxy access from our network for web-scraping?
-
-* [**Telegram channel**](https://t.me/node_turbo)
-* **Discord**: Find my Discord ID on my GitHub user profile page and DM me.
-
-[//]: # (Join our [**Discord server**]&#40;https://discord.gg/ZqdvQkSEc7&#41; and create a ticket.)
-
-## Data Privacy
-
-We log anonymous data for each SOCKS5 connection to train AI models to detect abnormal and malicious traffic.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

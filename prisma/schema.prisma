@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserData {
+  walletAddress String   @id @unique
+  username      String?
+  preferences   Json? // Example: { "theme": "dark", "notifications": true }
+  lastLogin     DateTime?
+
+  // Fields from NodeStats
+  totalEarnings Float?
+  todayEarnings Float?
+  bandwidthUsed Float? // in GB
+  uptime        Float? // percentage
+  requestCount  Int?
+  location      String?
+  isConnected   Boolean?
+
+  // Field for earnings history
+  earningsHistory Json? // Example: [{ "date": "2023-10-26", "earnings": 3.42, "timestamp": 1698350400000 }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
