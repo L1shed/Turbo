@@ -1,0 +1,67 @@
+{{define "title"}}Select Payment Option{{end}}
+{{define "head"}}
+<style>
+    .step-content {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .price-preview {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        color: var(--text-primary);
+    }
+
+    .price-preview strong {
+        font-size: 24px;
+        color: var(--accent-blue);
+    }
+</style>
+
+<script>
+    const rates = {
+        'BTC': 0.00000245,  // Price in BTC per GB
+        'ETH': 0.00003350   // Price in ETH per GB
+    };
+
+    function updatePreview() {
+        const gb = document.getElementById('gb').value;
+        const currency = document.getElementById('currency').value;
+        const rate = rates[currency];
+        const price = (gb * rate).toFixed(8);
+        document.getElementById('price-preview').innerHTML = `<strong>${price}</strong> ${currency}`;
+    }
+</script>
+{{end}}
+
+{{define "content"}}
+<div class="step-content">
+    <h2>Select Cryptocurrency and Bandwidth</h2>
+    <form method="POST" action="/payment">
+        <label for="currency">Cryptocurrency:</label>
+        <select name="currency" id="currency" onchange="updatePreview()">
+            <option value="BTC">Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="LTC">Litecoin (LTC)</option>
+            <option value="BCH">Bitcoin Cash (BCH)</option>
+            <option value="DOGE">Dogecoin (DOGE)</option>
+            <option value="USDT">Tether (USDT)</option>
+            <option value="DASH">Dash (DASH)</option>
+
+        </select>
+
+        <label for="gb">Bandwidth (GB):</label>
+        <input type="number" name="gb" id="gb" step="1" min="1" value="10" required
+               onchange="updatePreview()" oninput="updatePreview()">
+
+        <div class="price-preview">
+            <p>Estimated Price: <span id="price-preview">calculating...</span></p>
+        </div>
+
+        <input type="submit" value="Proceed to Payment" class="btn-action">
+    </form>
+</div>
+{{end}}
