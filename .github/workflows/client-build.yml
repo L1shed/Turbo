@@ -80,10 +80,6 @@ jobs:
     - name: Create Windows Installer
       if: matrix.goos == 'windows' && matrix.goarch == 'amd64'
       run: |
-        choco install innosetup --yes
-        
-        cd client/ || true
-        
         iscc installer.iss
         
 
@@ -110,6 +106,7 @@ jobs:
         cd client
         go build -ldflags="-s -w" -o ../build/${{ matrix.output_name }}
         
+        mkdir -p ../build/Turbo.app/Contents/MacOS
         cp ../build/${{ matrix.output_name }} ../build/Turbo.app/Contents/MacOS/Turbo
         
         brew install create-dmg || true
