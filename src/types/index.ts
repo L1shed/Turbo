@@ -1,8 +1,3 @@
-export interface Log {
-  id: number;
-  message: string;
-  createdAt: string;
-}
 export interface WindowWithEthereum extends Window {
   ethereum?: {
     request: (args: { method: string; params?: unknown[] }) => Promise<string | string[]>;

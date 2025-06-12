@@ -10,10 +10,8 @@ import {
   ExternalLink,
   Wifi,
   WifiOff,
-  MessageSquare,
-  Send,
 } from "lucide-react";
-import { NodeStats, EarningsDay, Log } from "../types";
+import { NodeStats, EarningsDay } from "../types";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { StatsCard } from "../components/StatsCard";
 import { EarningsChart } from "../components/EarningsChart";
@@ -53,60 +51,31 @@ export default function TurboNodeDashboard() {
   const [earningsHistory, setEarningsHistory] = useState<EarningsDay[]>(
     generateMockEarningsHistory()
   );
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [newLogMessage, setNewLogMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [wsConnectionStatus, setWsConnectionStatus] = useState<string>("disconnected");
+  const [isWebSocketEnabled, setIsWebSocketEnabled] = useState(true);
   const { isConnected } = useAccount();
 
   const webSocket = useWebSocket("ws://localhost:8766");
 
-  // Fetch logs from API
-  const fetchLogs = async () => {
-    try {
-      const response = await fetch("/api/logs");
-      if (response.ok) {
-        const logsData = await response.json();
-        setLogs(logsData);
-      }
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-    }
-  };
-
-  // Create a new log
-  const createLog = async (message: string) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/logs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message }),
-      });
-
-      if (response.ok) {
-        const newLog = await response.json();
-        setLogs((prevLogs) => [newLog, ...prevLogs]);
-        setNewLogMessage("");
-      }
-    } catch (error) {
-      console.error("Error creating log:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmitLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newLogMessage.trim()) {
-      createLog(newLogMessage.trim());
-    }
-  };
-
+  // Stabilize WebSocket connection status
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    let statusTimeout: NodeJS.Timeout;
+    
+    const updateConnectionStatus = (status: string) => {
+      clearTimeout(statusTimeout);
+      statusTimeout = setTimeout(() => {
+        setWsConnectionStatus(status);
+      }, 100); // Small delay to prevent rapid state changes
+    };
+
+    if (isWebSocketEnabled) {
+      updateConnectionStatus(webSocket.connectionStatus);
+    } else {
+      updateConnectionStatus("disconnected");
+    }
+
+    return () => clearTimeout(statusTimeout);
+  }, [webSocket.connectionStatus, isWebSocketEnabled]);
 
   useEffect(() => {
     if (webSocket.lastMessage) {
@@ -134,12 +103,14 @@ export default function TurboNodeDashboard() {
   }, [webSocket.lastMessage]);
 
   useEffect(() => {
-    webSocket.connect();
+    if (isWebSocketEnabled) {
+      webSocket.connect();
+    }
 
     return () => {
       webSocket.disconnect();
     };
-  }, [webSocket]);
+  }, [webSocket, isWebSocketEnabled]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -156,13 +127,23 @@ export default function TurboNodeDashboard() {
   }, []);
 
   const getWebSocketStatusIcon = () => {
-    switch (webSocket.connectionStatus) {
+    switch (wsConnectionStatus) {
       case "connected":
         return <Wifi className="w-4 h-4 text-green-500" />;
       case "connecting":
         return <Wifi className="w-4 h-4 text-yellow-500 animate-pulse" />;
       default:
         return <WifiOff className="w-4 h-4 text-red-500" />;
+    }
+  };
+
+  const handleWebSocketToggle = () => {
+    if (wsConnectionStatus === "connected") {
+      setIsWebSocketEnabled(false);
+      webSocket.disconnect();
+    } else {
+      setIsWebSocketEnabled(true);
+      webSocket.connect();
     }
   };
 
@@ -178,8 +159,8 @@ export default function TurboNodeDashboard() {
               <h1 className="text-xl font-bold">Turbo Node Dashboard</h1>
               <div className="flex items-center gap-2 ml-4">
                 {getWebSocketStatusIcon()}
-                <span className="text-sm text-gray-400">
-                  {webSocket.connectionStatus}
+                <span className="text-sm text-gray-400 min-w-[80px]">
+                  {wsConnectionStatus}
                 </span>
               </div>
             </div>
@@ -200,7 +181,7 @@ export default function TurboNodeDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div
-            className={`p-4 rounded-xl border ${
+            className={`p-4 rounded-xl border transition-all duration-300 ${
               nodeStats.isConnected
                 ? "bg-green-500/10 border-green-500/30"
                 : "bg-red-500/10 border-red-500/30"
@@ -209,7 +190,7 @@ export default function TurboNodeDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-3 h-3 rounded-full ${
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
                     nodeStats.isConnected ? "bg-green-500" : "bg-red-500"
                   }`}
                 ></div>
@@ -224,7 +205,7 @@ export default function TurboNodeDashboard() {
                   </p>
                 </div>
               </div>
-              <button className="text-gray-400 hover:text-white">
+              <button className="text-gray-400 hover:text-white transition-colors">
                 <Settings size={20} />
               </button>
             </div>
@@ -254,7 +235,7 @@ export default function TurboNodeDashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <EarningsChart data={earningsHistory} />
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -278,15 +259,12 @@ export default function TurboNodeDashboard() {
                 <Settings size={18} />
               </button>
               <button
-                onClick={() =>
-                  webSocket.connectionStatus === "connected"
-                    ? webSocket.disconnect()
-                    : webSocket.connect()
-                }
+                onClick={handleWebSocketToggle}
                 className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all text-white"
+                disabled={wsConnectionStatus === "connecting"}
               >
                 <span>
-                  {webSocket.connectionStatus === "connected"
+                  {wsConnectionStatus === "connected"
                     ? "Disconnect"
                     : "Connect"}{" "}
                   WebSocket
@@ -297,62 +275,10 @@ export default function TurboNodeDashboard() {
           </div>
         </div>
 
-        {/* Logs Section */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <MessageSquare className="w-5 h-5 text-orange-500" />
-            <h3 className="text-lg font-semibold text-white">System Logs</h3>
-          </div>
-
-          {/* Add Log Form */}
-          <form onSubmit={handleSubmitLog} className="mb-6">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newLogMessage}
-                onChange={(e) => setNewLogMessage(e.target.value)}
-                placeholder="Add a new log message..."
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !newLogMessage.trim()}
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg text-white font-medium transition-colors flex items-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                {isLoading ? "Adding..." : "Add Log"}
-              </button>
-            </div>
-          </form>
-
-          {/* Logs List */}
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {logs.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No logs found. Add your first log message above.</p>
-              </div>
-            ) : (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-3 bg-gray-800 rounded-lg border border-gray-700"
-                >
-                  <p className="text-white mb-1">{log.message}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
         <div className="mt-12 text-center text-gray-500 text-sm">
           <p>Turbo Node Runner • Earn passive income by sharing bandwidth</p>
           <p className="mt-2">
-            Using simulated data updates • WebSocket connection simulated • Logs powered by Supabase
+            Using simulated data updates • WebSocket connection simulated
           </p>
         </div>
       </main>
