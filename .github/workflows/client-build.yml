@@ -80,8 +80,8 @@ jobs:
     - name: Create Windows Installer
       if: matrix.goos == 'windows' && matrix.goarch == 'amd64'
       run: |
+        cd build
         iscc installer.iss
-        
 
     - name: Build Linux
       if: matrix.goos == 'linux'
