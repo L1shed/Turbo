@@ -8,9 +8,8 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/myapp</string>
         <string>~/Applications/Turbo.app/Contents/MacOS/Turbo</string>
-        <!-- Add other arguments here if needed -->
+        <string>{executable_path}</string>
     </array>
 
     <key>RunAtLoad</key>

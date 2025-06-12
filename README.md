@@ -45,7 +45,7 @@ flowchart TD
 
 ## Monetization
 
-Earn passive Bitcoin rewards for sharing your unused Internet bandwidth.
+Earn passive crypto rewards for sharing your unused Internet bandwidth.
 
 ### Run a Client Node
 
@@ -75,7 +75,11 @@ In fact, you can run several nodes on different devices/IPs with the same wallet
 
 ### Reward
 
-Base reward is `$0.10` per GB shared (bonuses if stable connection quality). That may seem low but the network is small so the handled bandwidth per node is high.
+Base reward is `$0.10` per GB shared but bonuses may apply such as if:
+* Your node has reached a daily connections streak over several days.
+* Your node has a stable _long-term_ connection.
+
+`$0.10` may seem low but the network is small, therefore the handled bandwidth per node is high.
 
 For example, a node shares 0.2 GB/hour of bandwidth.
 At the current price rate we get at least $14.64/month per device if running 24/7.

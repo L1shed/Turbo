@@ -8,20 +8,26 @@ import (
 )
 
 const (
-	VERSION = "experimental"
+	//VERSION = "0.1-experimental"
+	VERSION = ""
 	WEBSITE = "http://localhost:3000"
 )
 
 func main() {
 	go conn.ListenWallet(WEBSITE)
+	go conn.ConnectQuicServer()
 
-	log.Println(platform.EnableAutoStart())
 	systray.Run(onReady, nil)
-
 }
 
 func onReady() {
 	setupTray()
 
-	go conn.ConnectQuicServer()
+	if err := platform.EnableAutoStart(); err != nil {
+		log.Println(err)
+	}
+
+	if err := AutoUpdate(); err != nil {
+		log.Println(err)
+	}
 }

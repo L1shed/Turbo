@@ -1,11 +1,11 @@
 package platform
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 )
 
 const plistName = "me.lished.turbo.plist"
@@ -21,19 +21,16 @@ func EnableAutoStart() error {
 		return err
 	}
 
-	log.Println(executable)
-
 	launchAgentsDir := filepath.Join(usr.HomeDir, "Library", "LaunchAgents")
 	os.MkdirAll(launchAgentsDir, 0755)
 
 	currentPlistPath := filepath.Join("./assets", plistName)
-	//currentPlistPath := filepath.Join(executable, "../Ressources", "me.lished.turbo.plist")
 
 	plistPath := filepath.Join(launchAgentsDir, plistName)
 
 	if data, err := os.ReadFile(currentPlistPath); err != nil {
 		return err
-	} else if err := os.WriteFile(plistPath, data, 0644); err != nil {
+	} else if err := os.WriteFile(plistPath, []byte(strings.Replace(string(data), "{executable_path}", executable, 1)), 0644); err != nil {
 		return err
 	}
 
