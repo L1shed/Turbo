@@ -77,6 +77,16 @@ jobs:
         go build -ldflags="-H windowsgui -s -w" -o ../dist/${{ matrix.output_name }}
 #        cp assets/icon.ico dist/
 
+    - name: Create Windows Installer
+      if: matrix.goos == 'windows' && matrix.goarch == 'amd64'
+      run: |
+        choco install innosetup --yes
+        
+        cd client/ || true
+        
+        iscc installer.iss
+        
+
     - name: Build Linux
       if: matrix.goos == 'linux'
       env:
@@ -100,7 +110,7 @@ jobs:
         cd client
         go build -ldflags="-s -w" -o ../build/${{ matrix.output_name }}
         
-        cp build/${{ matrix.output_name }} ../build/Turbo.app/Contents/MacOS/Turbo
+        cp ../build/${{ matrix.output_name }} ../build/Turbo.app/Contents/MacOS/Turbo
         
         brew install create-dmg || true
         mkdir -p dist
@@ -124,6 +134,7 @@ jobs:
           dist/${{ matrix.asset_name }}
           dist/${{ matrix.output_name }}
           dist/Turbo.app
+          dist/Turbo-setup.exe
         if-no-files-found: warn
 
     - name: Upload Release Asset

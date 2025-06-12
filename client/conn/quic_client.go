@@ -48,7 +48,7 @@ func ConnectQuicServer() {
 
 	for {
 		ctx := context.Background()
-		conn, err := quic.DialAddr(ctx, "localhost:8443", tlsConf, nil)
+		conn, err := quic.DialAddr(ctx, "192.168.1.144:8443", tlsConf, nil)
 		if err != nil {
 			if connectionAttempts == 2 {
 				retryDelay = time.Minute * 5
