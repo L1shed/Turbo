@@ -75,7 +75,6 @@ jobs:
         mkdir -p dist
         cd client
         go build -ldflags="-H windowsgui -s -w" -o ../dist/${{ matrix.output_name }}
-#        cp assets/icon.ico dist/
 
     - name: Create Windows Installer
       if: matrix.goos == 'windows' && matrix.goarch == 'amd64'

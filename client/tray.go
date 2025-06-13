@@ -8,8 +8,8 @@ import (
 	"runtime"
 )
 
-//go:embed assets/icon.ico
-var iconData []byte // Embed an icon file (Windows .ico)
+//go:embed assets/tray_icon.ico
+var iconData []byte
 
 func setupTray() {
 	systray.SetTemplateIcon(iconData, iconData)
