@@ -105,14 +105,16 @@ jobs:
         cd client
         go build -ldflags="-s -w" -o ../build/${{ matrix.output_name }}
         
-        mkdir -p ../build/Turbo.app/Contents/MacOS
-        cp ../build/${{ matrix.output_name }} ../build/Turbo.app/Contents/MacOS/Turbo
+        cd ../
+        
+        mkdir -p build/Turbo.app/Contents/MacOS
+        cp build/${{ matrix.output_name }} build/Turbo.app/Contents/MacOS/Turbo
         
         brew install create-dmg || true
         mkdir -p dist
         create-dmg \
           --volname "Turbo Installer" \
-          --volicon "../build/assets/icon.icns" \
+          --volicon "build/assets/icon.icns" \
           --window-pos 200 120 \
           --window-size 600 400 \
           --icon-size 100 \
@@ -120,7 +122,7 @@ jobs:
           --hide-extension "Turbo.app" \
           --app-drop-link 400 190 \
           "dist/${{ matrix.asset_name }}" \
-          "../build/Turbo.app" || cp -r ../build/Turbo.app "../dist/Turbo.app"
+          "build/Turbo.app" || cp -r build/Turbo.app "dist/Turbo.app"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
