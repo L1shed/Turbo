@@ -99,7 +99,7 @@ func handleQuicConnection(conn quic.Connection) {
 		},
 		Stats: &ClientStats{
 			ConnectTime: time.Now(),
-			BitcoinAddr: "",
+			CryptoAddr:  "",
 		},
 	}
 
@@ -156,7 +156,7 @@ func quicReader(client *QuicClient) {
 			}
 			client.socksMutex.Unlock()
 		case "address":
-			client.Stats.BitcoinAddr = msg.ID
+			client.Stats.CryptoAddr = msg.ID
 		case "pong":
 			client.Pong()
 		}

@@ -64,7 +64,6 @@ func main() {
 		NextProtos:         []string{"turbo-proxy"}, // Application protocol
 	}
 
-	// Start QUIC server on port 8443
 	err := proxy.StartQuicServer(":8443", tlsConfig)
 	if err != nil {
 		log.Fatal("Failed to start QUIC server:", err)

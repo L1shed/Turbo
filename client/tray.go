@@ -1,17 +1,18 @@
 package main
 
 import (
-	"fmt"
+	_ "embed"
 	"github.com/getlantern/systray"
 	"log"
-	"os"
 	"os/exec"
 	"runtime"
 )
 
+//go:embed assets/tray_icon.ico
+var iconData []byte
+
 func setupTray() {
-	icon := getIcon("assets/icon.ico")
-	systray.SetTemplateIcon(icon, icon)
+	systray.SetTemplateIcon(iconData, iconData)
 	systray.SetTooltip("Turbo running")
 
 	dashboard := systray.AddMenuItem("Dashboard", "Open dashboard")
@@ -21,7 +22,7 @@ func setupTray() {
 		for {
 			select {
 			case <-dashboard.ClickedCh:
-				err := open("http://localhost:8080")
+				err := open(WEBSITE)
 				if err != nil {
 					log.Println("Failed to open browser:", err)
 				}
@@ -33,25 +34,17 @@ func setupTray() {
 	}()
 }
 
-func getIcon(s string) []byte {
-	b, err := os.ReadFile(s)
-	if err != nil {
-		fmt.Print(err)
-	}
-	return b
-}
-
 func open(url string) error {
 	var cmd string
 	var args []string
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start"}
+		cmd = "rundll32"
+		args = []string{"url.dll,FileProtocolHandler"}
 	case "darwin":
 		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
+	default:
 		cmd = "xdg-open"
 	}
 	args = append(args, url)

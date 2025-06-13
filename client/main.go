@@ -1,32 +1,21 @@
 package main
 
 import (
-	"flag"
+	"client/conn"
+	"client/platform"
 	"github.com/getlantern/systray"
-	"net"
+	"log"
 )
 
-type Message struct {
-	Type   string `json:"type"`
-	ID     string `json:"id"`
-	Host   string `json:"host,omitempty"`
-	Port   int    `json:"port,omitempty"`
-	Data   string `json:"data,omitempty"`
-	Status string `json:"status,omitempty"`
-	Error  string `json:"error,omitempty"`
-}
-
-type Connection struct {
-	conn     net.Conn
-	dataChan chan []byte
-}
-
-var (
-	bitcoinAddr *string
+const (
+	//VERSION = "0.1-experimental"
+	VERSION = ""
+	WEBSITE = "http://localhost:3000"
 )
 
 func main() {
-	bitcoinAddr = flag.String("address", "undefined", "Send automatic Bitcoin rewards")
+	go conn.ListenWallet(WEBSITE)
+	go conn.ConnectQuicServer()
 
 	systray.Run(onReady, nil)
 }
@@ -34,5 +23,11 @@ func main() {
 func onReady() {
 	setupTray()
 
-	go connectQuicServer()
+	if err := platform.EnableAutoStart(); err != nil {
+		log.Println(err)
+	}
+
+	if err := AutoUpdate(); err != nil {
+		log.Println(err)
+	}
 }
