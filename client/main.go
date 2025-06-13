@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	//VERSION = "0.1-experimental"
-	VERSION = ""
+	VERSION = "0.1.0-experimental"
 	WEBSITE = "http://localhost:3000"
 )
 
