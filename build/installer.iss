@@ -16,7 +16,7 @@ Name: "{group}\Turbo"; Filename: "{app}\Turbo.exe"
 Name: "{commondesktop}\Turbo"; Filename: "{app}\Turbo.exe"; Tasks: desktopicon
 
 [Files]
-Source: "Turbo.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "../dist/Turbo.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

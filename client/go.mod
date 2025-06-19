@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	github.com/getlantern/systray v1.2.2
 	github.com/quic-go/quic-go v0.52.0
+	golang.org/x/mod v0.18.0
 	golang.org/x/sys v0.33.0
 )
 
@@ -22,7 +23,6 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
