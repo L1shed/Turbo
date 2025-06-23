@@ -120,3 +120,199 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Markdown Styles for Blog Posts */
+@layer components {
+  .prose-blog {
+    @apply max-w-none text-gray-700 leading-relaxed;
+  }
+
+  .prose-blog h1 {
+    @apply text-4xl font-bold text-gray-900 mb-8 mt-12 first:mt-0 leading-tight;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog h2 {
+    @apply text-3xl font-bold text-gray-900 mb-6 mt-10 leading-tight border-b border-gray-200 pb-3;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog h3 {
+    @apply text-2xl font-semibold text-gray-900 mb-4 mt-8 leading-snug;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog h4 {
+    @apply text-xl font-semibold text-gray-900 mb-3 mt-6 leading-snug;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog h5 {
+    @apply text-lg font-semibold text-gray-900 mb-3 mt-6;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog h6 {
+    @apply text-base font-semibold text-gray-900 mb-2 mt-4;
+    scroll-margin-top: 6rem;
+  }
+
+  .prose-blog p {
+    @apply mb-6 leading-7 text-gray-700;
+  }
+
+  .prose-blog a {
+    @apply text-orange-600 hover:text-orange-700 font-medium no-underline hover:underline transition-colors;
+  }
+
+  .prose-blog strong {
+    @apply font-semibold text-gray-900;
+  }
+
+  .prose-blog em {
+    @apply italic text-gray-800;
+  }
+
+  .prose-blog ul {
+    @apply list-disc list-inside space-y-2 mb-6 text-gray-700;
+  }
+
+  .prose-blog ol {
+    @apply list-decimal list-inside space-y-2 mb-6 text-gray-700;
+  }
+
+  .prose-blog li {
+    @apply leading-7;
+  }
+
+  .prose-blog li > ul,
+  .prose-blog li > ol {
+    @apply mt-2 mb-0 ml-6;
+  }
+
+  .prose-blog blockquote {
+    @apply border-l-4 border-orange-500 pl-6 italic mt-8 text-gray-800 bg-orange-50 py-4 rounded-r-lg;
+  }
+
+  .prose-blog code {
+    @apply bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono;
+  }
+
+  .prose-blog pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-6 text-sm;
+    line-height: 1.5;
+  }
+
+  .prose-blog pre code {
+    @apply bg-transparent text-gray-100 p-0 px-0 py-0 rounded-none;
+    font-size: inherit;
+  }
+
+  /* Remove double containers on code blocks */
+  .prose-blog pre > code {
+    @apply block;
+  }
+
+  .prose-blog table {
+    @apply w-full border-collapse border border-gray-200 my-8;
+  }
+
+  .prose-blog thead {
+    @apply bg-gray-50;
+  }
+
+  .prose-blog th {
+    @apply border border-gray-200 px-4 py-3 text-left font-semibold text-gray-900;
+  }
+
+  .prose-blog td {
+    @apply border border-gray-200 px-4 py-3 text-gray-700;
+  }
+
+  .prose-blog hr {
+    @apply border-gray-300 my-12;
+  }
+
+  .prose-blog img {
+    @apply rounded-lg shadow-lg my-8 max-w-full h-auto;
+  }
+
+  /* Code syntax highlighting improvements */
+  .prose-blog .hljs {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  .prose-blog .hljs-keyword {
+    @apply text-blue-400;
+  }
+
+  .prose-blog .hljs-string {
+    @apply text-green-400;
+  }
+
+  .prose-blog .hljs-comment {
+    @apply text-gray-500 italic;
+  }
+
+  .prose-blog .hljs-number {
+    @apply text-yellow-400;
+  }
+
+  .prose-blog .hljs-function {
+    @apply text-purple-400;
+  }
+
+  /* Table of Contents styles */
+  .prose-blog .toc {
+    @apply bg-gray-50 border border-gray-200 rounded-lg p-6 my-8;
+  }
+
+  .prose-blog .toc h3 {
+    @apply text-lg font-semibold text-gray-900 mb-4 mt-0 border-b-0 pb-0;
+  }
+
+  .prose-blog .toc ul {
+    @apply list-none space-y-1 mb-0;
+  }
+
+  .prose-blog .toc a {
+    @apply text-gray-600 hover:text-orange-600 text-sm;
+  }
+
+  /* Special content blocks */
+  .prose-blog .info-box {
+    @apply bg-blue-50 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg;
+  }
+
+  .prose-blog .warning-box {
+    @apply bg-yellow-50 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg;
+  }
+
+  .prose-blog .success-box {
+    @apply bg-green-50 border-l-4 border-green-500 p-4 my-6 rounded-r-lg;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .prose-blog h1 {
+      @apply text-3xl;
+    }
+    
+    .prose-blog h2 {
+      @apply text-2xl;
+    }
+    
+    .prose-blog h3 {
+      @apply text-xl;
+    }
+    
+    .prose-blog table {
+      @apply text-sm;
+    }
+    
+    .prose-blog th,
+    .prose-blog td {
+      @apply px-2 py-2;
+    }
+  }
+}

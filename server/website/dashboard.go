@@ -68,7 +68,6 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 	defer proxy.QuicMutex.RUnlock()
 
 	if address != "" {
-		// Search for clients with specified Bitcoin address
 		for id, client := range proxy.QuicClients {
 			if client.Stats.CryptoAddr == address {
 				viewData.Clients = append(viewData.Clients, getClientData(id, client))
@@ -77,7 +76,6 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 		viewData.NotFound = len(viewData.Clients) == 0
 	} else {
 		i := 1
-		// Show all clients
 		for _, client := range proxy.QuicClients {
 			viewData.Clients = append(viewData.Clients, getClientData("anon"+strconv.Itoa(i), client))
 		}

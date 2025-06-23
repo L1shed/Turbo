@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Activity,
@@ -10,9 +8,11 @@ import {
   ExternalLink,
   Wifi,
   WifiOff,
+  Database,
 } from "lucide-react";
+import Link from "next/link";
 import { NodeStats, EarningsDay } from "../types";
-import { useWebSocket } from "../hooks/useWebSocket";
+import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
 import { StatsCard } from "../components/StatsCard";
 import { EarningsChart } from "../components/EarningsChart";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -29,122 +29,35 @@ const mockNodeStats: NodeStats = {
   timestamp: Date.now(),
 };
 
-const generateMockEarningsHistory = (): EarningsDay[] => {
-  const history: EarningsDay[] = [];
-  const today = new Date();
-
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    history.push({
-      date: date.toISOString().split("T")[0],
-      earnings: Math.random() * 4 + 1,
-      timestamp: date.getTime(),
-    });
-  }
-
-  return history;
-};
-
 export default function TurboNodeDashboard() {
-  const [nodeStats, setNodeStats] = useState<NodeStats>(mockNodeStats);
-  const [earningsHistory, setEarningsHistory] = useState<EarningsDay[]>(
-    generateMockEarningsHistory()
-  );
-  const [wsConnectionStatus, setWsConnectionStatus] = useState<string>("disconnected");
-  const [isWebSocketEnabled, setIsWebSocketEnabled] = useState(true);
-  const { isConnected } = useAccount();
+  const { isConnected: walletConnected } = useAccount();
+  const {
+    nodeStats,
+    earningsHistory,
+    loading,
+    error,
+    isConnected: supabaseConnected,
+  } = useSupabaseRealtime();
 
-  const webSocket = useWebSocket("ws://localhost:8766");
+  // Use mock data as fallback when wallet is not connected or no data is available
+  const displayStats = nodeStats || mockNodeStats;
+  const displayHistory = earningsHistory.length > 0 ? earningsHistory : [];
 
-  // Stabilize WebSocket connection status
-  useEffect(() => {
-    let statusTimeout: NodeJS.Timeout;
-    
-    const updateConnectionStatus = (status: string) => {
-      clearTimeout(statusTimeout);
-      statusTimeout = setTimeout(() => {
-        setWsConnectionStatus(status);
-      }, 100); // Small delay to prevent rapid state changes
-    };
-
-    if (isWebSocketEnabled) {
-      updateConnectionStatus(webSocket.connectionStatus);
-    } else {
-      updateConnectionStatus("disconnected");
+  const getSupabaseStatusIcon = () => {
+    if (loading) {
+      return <Database className="w-4 h-4 text-yellow-500 animate-pulse" />;
     }
-
-    return () => clearTimeout(statusTimeout);
-  }, [webSocket.connectionStatus, isWebSocketEnabled]);
-
-  useEffect(() => {
-    if (webSocket.lastMessage) {
-      const { type, data } = webSocket.lastMessage;
-
-      switch (type) {
-        case "stats":
-          setNodeStats((prevStats) => ({
-            ...prevStats,
-            ...data,
-            timestamp: Date.now(),
-          }));
-          break;
-        case "earnings":
-          setEarningsHistory(data);
-          break;
-        case "connection":
-          setNodeStats((prevStats) => ({
-            ...prevStats,
-            isConnected: data.isConnected,
-          }));
-          break;
-      }
-    }
-  }, [webSocket.lastMessage]);
-
-  useEffect(() => {
-    if (isWebSocketEnabled) {
-      webSocket.connect();
-    }
-
-    return () => {
-      webSocket.disconnect();
-    };
-  }, [webSocket, isWebSocketEnabled]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNodeStats((prev) => ({
-        ...prev,
-        requestCount: prev.requestCount + Math.floor(Math.random() * 5),
-        bandwidthUsed: prev.bandwidthUsed + Math.random() * 0.1,
-        todayEarnings: prev.todayEarnings + Math.random() * 0.01,
-        timestamp: Date.now(),
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const getWebSocketStatusIcon = () => {
-    switch (wsConnectionStatus) {
-      case "connected":
-        return <Wifi className="w-4 h-4 text-green-500" />;
-      case "connecting":
-        return <Wifi className="w-4 h-4 text-yellow-500 animate-pulse" />;
-      default:
-        return <WifiOff className="w-4 h-4 text-red-500" />;
-    }
+    return supabaseConnected ? (
+      <Database className="w-4 h-4 text-green-500" />
+    ) : (
+      <Wifi className="w-4 h-4 text-red-500" />
+    );
   };
 
-  const handleWebSocketToggle = () => {
-    if (wsConnectionStatus === "connected") {
-      setIsWebSocketEnabled(false);
-      webSocket.disconnect();
-    } else {
-      setIsWebSocketEnabled(true);
-      webSocket.connect();
-    }
+  const getSupabaseStatusText = () => {
+    if (loading) return "connecting";
+    if (!walletConnected) return "wallet disconnected";
+    return supabaseConnected ? "realtime connected" : "disconnected";
   };
 
   return (
@@ -158,14 +71,27 @@ export default function TurboNodeDashboard() {
               </div>
               <h1 className="text-xl font-bold">Turbo Node Dashboard</h1>
               <div className="flex items-center gap-2 ml-4">
-                {getWebSocketStatusIcon()}
-                <span className="text-sm text-gray-400 min-w-[80px]">
-                  {wsConnectionStatus}
+                {getSupabaseStatusIcon()}
+                <span className="text-sm text-gray-400 min-w-[100px]">
+                  {getSupabaseStatusText()}
                 </span>
+                {error && (
+                  <span className="text-xs text-red-400 ml-2">
+                    Error: {error}
+                  </span>
+                )}
               </div>
             </div>
 
             <div className="flex items-center gap-4">
+              <nav className="hidden md:flex items-center gap-6 mr-4">
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  Home
+                </Link>
+                <Link href="/blog" className="text-gray-300 hover:text-white transition-colors">
+                  Blog
+                </Link>
+              </nav>
               <ConnectButton
                 showBalance={false}
                 accountStatus={{
@@ -182,7 +108,7 @@ export default function TurboNodeDashboard() {
         <div className="mb-8">
           <div
             className={`p-4 rounded-xl border transition-all duration-300 ${
-              nodeStats.isConnected
+              displayStats.isConnected
                 ? "bg-green-500/10 border-green-500/30"
                 : "bg-red-500/10 border-red-500/30"
             }`}
@@ -191,18 +117,23 @@ export default function TurboNodeDashboard() {
               <div className="flex items-center gap-3">
                 <div
                   className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    nodeStats.isConnected ? "bg-green-500" : "bg-red-500"
+                    displayStats.isConnected ? "bg-green-500" : "bg-red-500"
                   }`}
                 ></div>
                 <div>
                   <h3 className="font-medium text-white">
-                    Node Status: {nodeStats.isConnected ? "Online" : "Offline"}
+                    Node Status: {displayStats.isConnected ? "Online" : "Offline"}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    Location: {nodeStats.location} • Uptime: {nodeStats.uptime}%
+                    Location: {displayStats.location} • Uptime: {displayStats.uptime}%
                     • Last update:{" "}
-                    {new Date(nodeStats.timestamp).toLocaleTimeString()}
+                    {new Date(displayStats.timestamp).toLocaleTimeString()}
                   </p>
+                  {!walletConnected && (
+                    <p className="text-xs text-yellow-400 mt-1">
+                      Connect your wallet to see live data
+                    </p>
+                  )}
                 </div>
               </div>
               <button className="text-gray-400 hover:text-white transition-colors">
@@ -216,27 +147,27 @@ export default function TurboNodeDashboard() {
           <StatsCard
             icon={TrendingUp}
             title="Total Earnings"
-            value={`$${nodeStats.totalEarnings.toFixed(2)}`}
+            value={`$${displayStats.totalEarnings.toFixed(2)}`}
           />
           <StatsCard
             icon={Zap}
             title="Today's Earnings"
-            value={`$${nodeStats.todayEarnings.toFixed(2)}`}
+            value={`$${displayStats.todayEarnings.toFixed(2)}`}
           />
           <StatsCard
             icon={Activity}
             title="Bandwidth Used"
-            value={`${nodeStats.bandwidthUsed.toFixed(1)} GB`}
+            value={`${displayStats.bandwidthUsed.toFixed(1)} GB`}
           />
           <StatsCard
             icon={Globe}
             title="Requests Served"
-            value={nodeStats.requestCount.toLocaleString()}
+            value={displayStats.requestCount.toLocaleString()}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <EarningsChart data={earningsHistory} />
+          <EarningsChart data={displayHistory} />
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-white">
@@ -249,7 +180,7 @@ export default function TurboNodeDashboard() {
               </button>
               <button
                 className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all disabled:opacity-50 text-white"
-                disabled={!isConnected}
+                disabled={!walletConnected}
               >
                 <span>Withdraw Earnings</span>
                 <ExternalLink size={18} />
@@ -259,17 +190,13 @@ export default function TurboNodeDashboard() {
                 <Settings size={18} />
               </button>
               <button
-                onClick={handleWebSocketToggle}
                 className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all text-white"
-                disabled={wsConnectionStatus === "connecting"}
+                disabled={loading}
               >
                 <span>
-                  {wsConnectionStatus === "connected"
-                    ? "Disconnect"
-                    : "Connect"}{" "}
-                  WebSocket
+                  {supabaseConnected ? "Realtime Active" : "Connect to Database"}
                 </span>
-                {getWebSocketStatusIcon()}
+                {getSupabaseStatusIcon()}
               </button>
             </div>
           </div>
@@ -278,7 +205,10 @@ export default function TurboNodeDashboard() {
         <div className="mt-12 text-center text-gray-500 text-sm">
           <p>Turbo Node Runner • Earn passive income by sharing bandwidth</p>
           <p className="mt-2">
-            Using simulated data updates • WebSocket connection simulated
+            {walletConnected 
+              ? `Live data from Supabase • ${supabaseConnected ? 'Realtime updates active' : 'Realtime disconnected'}`
+              : 'Connect wallet to see live data • Using demo data'
+            }
           </p>
         </div>
       </main>

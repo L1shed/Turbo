@@ -42,7 +42,7 @@ func HandleSocksConn(conn net.Conn) {
 	for !success && attempts < 3 {
 		client = FindAvailableClient()
 		if client == nil {
-			log.Println("No active WebSocket Clients available")
+			log.Println("No active clients available")
 			return
 		}
 
@@ -71,7 +71,7 @@ func HandleSocksConn(conn net.Conn) {
 
 		atomic.AddInt32(&client.Stats.ActiveConns, 1)
 
-		// Send CONNECT request over WebSocket
+		// Send CONNECT request over QUIC
 		msg := Message{Type: "connect", ID: id, Host: host, Port: port}
 		err = client.SendMessage(msg)
 

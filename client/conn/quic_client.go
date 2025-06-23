@@ -42,8 +42,8 @@ func ConnectQuicServer() {
 	retryDelay := time.Second * 4
 
 	tlsConf := &tls.Config{
-		InsecureSkipVerify: true,                    // Note: In production, use proper certificate validation
-		NextProtos:         []string{"turbo-proxy"}, // Custom protocol name
+		InsecureSkipVerify: true, // Note: In production, use proper certificate validation
+		NextProtos:         []string{"turbo-proxy"},
 	}
 
 	for {
@@ -61,6 +61,9 @@ func ConnectQuicServer() {
 			continue
 		}
 		log.Println("Connected to QUIC server")
+
+		// let the server accept our bidirectional stream and register us
+		time.Sleep(100 * time.Millisecond)
 
 		stream, err := conn.OpenStreamSync(ctx)
 		if err != nil {
@@ -104,6 +107,8 @@ func quicReader(stream quic.Stream) {
 
 			return
 		}
+
+		log.Println("Received message:", msg.Type)
 
 		switch msg.Type {
 		case "connect":

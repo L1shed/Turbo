@@ -28,7 +28,20 @@ export interface EarningsDay {
   timestamp: number;
 }
 
-export type WebSocketMessage =
-  | { type: 'stats'; data: NodeStats }
-  | { type: 'earnings'; data: EarningsDay[] }
-  | { type: 'connection'; data: { isConnected: boolean } };
+export interface SupabaseHookReturn {
+  insertData: (table: string, data: Record<string, any>) => Promise<any>;
+  fetchData: (table: string, query?: QueryOptions) => Promise<any>;
+  updateData: (table: string, id: string, updates: Record<string, any>) => Promise<any>;
+  deleteData: (table: string, id: string) => Promise<boolean>;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface QueryOptions {
+  eq?: Record<string, any>;
+  orderBy?: {
+    column: string;
+    ascending?: boolean;
+  };
+  limit?: number;
+}

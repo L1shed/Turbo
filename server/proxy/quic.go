@@ -93,6 +93,7 @@ func handleQuicConnection(conn quic.Connection) {
 		stream:     stream,
 		socksConns: make(map[string]*socks.SocksConn),
 		respChans:  make(map[string]chan Message),
+		lastPing:   time.Now(),
 		Metrics: &Metrics{
 			Reliability: 0.7,
 			Score:       50,
@@ -114,18 +115,18 @@ func quicReader(client *QuicClient) {
 	defer func() {
 		QuicMutex.Lock()
 		delete(QuicClients, client.id)
+		log.Printf("QUIC client disconnected: %s. Remaining clients: %d", client.id, len(QuicClients))
 		QuicMutex.Unlock()
 
 		client.stream.Close()
 		client.conn.CloseWithError(0, "client disconnected")
-		log.Printf("Closed QUIC client: %s", client.id)
 	}()
 
 	decoder := json.NewDecoder(client.stream)
 	for {
 		var msg Message
 		if err := decoder.Decode(&msg); err != nil {
-			log.Printf("QUIC read error: %v", err)
+			log.Printf("QUIC read error for client %s: %v", client.id, err)
 			return
 		}
 

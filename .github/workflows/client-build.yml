@@ -132,7 +132,14 @@ jobs:
           dist/${{ matrix.asset_name }}
           dist/${{ matrix.output_name }}
           dist/Turbo.app
-          dist/Turbo-setup.exe
+        if-no-files-found: warn
+
+    - name: Upload Windows Installer
+      if: matrix.goos == 'windows' && matrix.goarch == 'amd64'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Turbo-setup.exe
+        path: dist/Turbo-setup.exe
         if-no-files-found: warn
 
     - name: Upload Release Asset

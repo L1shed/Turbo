@@ -25,8 +25,13 @@ flowchart TD
     ClientNode[Client Node]
     NodeRunner(Node Runner)
     PaymentGateway[Payment Gateway]
-    BitcoinNetwork[(Crypto Blockchain)]
+    Blockchain[(Crypto Blockchain)]
     TargetWebsite[Target Website]
+    Website[Website]
+    
+    Website --> |Provides Data| NodeRunner
+%%    Website --> |Provides Data| Blockchain
+    
 
     User --> |Sends Requests| ProxyServer
     User --> |Buys Credits| PaymentGateway
@@ -37,10 +42,10 @@ flowchart TD
     ClientNode --> |Processes Requests To| TargetWebsite
     NodeRunner --> |Operates| ClientNode
 
-    PaymentGateway --> |Processes Payments| BitcoinNetwork
+    PaymentGateway --> |Processes Payments| Blockchain
     PaymentGateway --> |Updates Credits In| Redis
 
-    BitcoinNetwork --> |Sends Rewards| NodeRunner
+    Blockchain --> |Sends Rewards| NodeRunner
 ```
 
 ## Monetization
