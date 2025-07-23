@@ -8,12 +8,17 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "postcss": {
+    "plugins": [
+      "@tailwindcss/postcss"
+    ]
+  },
   "dependencies": {
     "@prisma/client": "^6.8.2",
     "@prisma/extension-accelerate": "^2.0.1",
     "@rainbow-me/rainbowkit": "^2.2.6",
     "@supabase/supabase-js": "^2.50.0",
-    "@tailwindcss/postcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query": "^5.80.6",
     "@wagmi/connectors": "^5.8.4",
@@ -42,7 +47,7 @@
     "remark-reading-time": "^2.0.2",
     "remark-rehype": "^11.1.2",
     "tailwind-merge": "^3.3.0",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.11",
     "unified": "^11.0.5",
     "viem": "^2.30.6",
     "wagmi": "^2.15.6"
@@ -52,6 +57,7 @@
     "@types/node": "^20.19.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "pino-pretty": "^13.0.0",

@@ -31,7 +31,7 @@ func HandleSocksConn(conn net.Conn) {
 	// TODO:    ^ params logic
 
 	if err != nil {
-		log.Println("SOCKS handshake failed:", err)
+		log.Printf("SOCKS handshake failed for %s, %v", conn.RemoteAddr(), err)
 		return
 	}
 
@@ -46,18 +46,15 @@ func HandleSocksConn(conn net.Conn) {
 			return
 		}
 
-		// Assign ID and set up connection
-		client.mutex.Lock()
 		id := fmt.Sprintf("%d", nextID)
 		nextID++
-		client.mutex.Unlock()
 
 		dataChan := make(chan []byte, 100)
 		sc := &socks.SocksConn{
 			ID:       id,
 			Conn:     conn,
 			DataChan: dataChan,
-			Metrics: socks.ConnectionMetrics{
+			Metrics: &socks.ConnectionMetrics{
 				Timestamp: time.Now().Unix(),
 				Protocol:  conn.RemoteAddr().Network(),
 			},
@@ -67,14 +64,33 @@ func HandleSocksConn(conn net.Conn) {
 		client.socksConns[id] = sc
 		client.socksMutex.Unlock()
 
-		go client.HandleSocksConnection(sc)
-
 		atomic.AddInt32(&client.Stats.ActiveConns, 1)
 
-		// Send CONNECT request over QUIC
-		msg := Message{Type: "connect", ID: id, Host: host, Port: port}
-		err = client.SendMessage(msg)
+		_, err = conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0}) // success
+		if err != nil {
+			log.Println(err)
+			client.SendCloseMessage(sc.ID)
+			continue
+		}
 
+		buffer := make([]byte, 32*1024)
+
+		var data string
+		n, err := sc.Conn.Read(buffer)
+		if err != nil {
+			client.SendCloseMessage(sc.ID)
+			return
+		}
+
+		if n > 0 {
+			data = base64.StdEncoding.EncodeToString(buffer[:n])
+
+			atomic.AddUint64(&client.Stats.BytesSent, uint64(n))
+			atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
+		}
+
+		msg := Message{Type: "connect", ID: id, Host: host, Port: port, Data: data}
+		err = client.SendMessage(msg)
 		if err != nil {
 			log.Println("WriteJSON error:", err)
 			// Clean up and try another client
@@ -85,90 +101,14 @@ func HandleSocksConn(conn net.Conn) {
 			continue
 		}
 
-		// Wait for connect response with timeout
-		respChan := make(chan Message)
-		client.respMutex.Lock()
-		client.respChans[id] = respChan
-		client.respMutex.Unlock()
+		success = true
 
-		// Set up response timeout
-		var respMsg Message
-		select {
-		case respMsg = <-respChan:
-			if respMsg.Status == "success" {
-				success = true
-
-				_, err = conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0})
-				if err != nil {
-					log.Println(err)
-					client.SendCloseMessage(sc.ID)
-					continue
-				}
-				client.Metrics.Reliability *= 1.02
-				client.UpdateScore()
-
-				go relayFromSocksToQuic(client, sc, sc.ID)
-				relayFromChanToSocks(client, sc, sc.ID)
-				return
-			} else {
-				log.Printf("Client %s failed to connect to %s:%d", client.id, host, port)
-				client.socksMutex.Lock()
-				delete(client.socksConns, id)
-				client.socksMutex.Unlock()
-				atomic.AddInt32(&client.Stats.ActiveConns, -1)
-			}
-		case <-time.After(connectionTimeout):
-			log.Printf("Connection timeout for client %s to %s:%d", client.id, host, port)
-
-			client.respMutex.Lock()
-			delete(client.respChans, id)
-			client.respMutex.Unlock()
-
-			client.socksMutex.Lock()
-			delete(client.socksConns, id)
-			client.socksMutex.Unlock()
-
-			client.Metrics.Reliability *= 0.8
-			client.UpdateScore()
-
-			atomic.AddInt32(&client.Stats.ActiveConns, -1)
-
-		}
-		attempts++
+		go relayFromSocksToQuic(client, sc, sc.ID)
+		relayFromChanToSocks(client, sc, sc.ID)
+		return
 	}
 
 	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
-}
-
-func (c *QuicClient) HandleSocksConnection(sc *socks.SocksConn) {
-	go func() {
-		buffer := make([]byte, 32*1024)
-		for {
-			n, err := sc.Conn.Read(buffer)
-			if err != nil {
-				c.SendCloseMessage(sc.ID)
-				return
-			}
-
-			if n > 0 {
-				// Send data back to client
-				encodedData := base64.StdEncoding.EncodeToString(buffer[:n])
-				msg := Message{
-					Type: "data",
-					ID:   sc.ID,
-					Data: encodedData,
-				}
-
-				if err := c.SendMessage(msg); err != nil {
-					log.Printf("Failed to send data to client: %v", err)
-					return
-				}
-
-				atomic.AddUint64(&c.Stats.BytesSent, uint64(n))
-				atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
-			}
-		}
-	}()
 }
 
 func relayFromSocksToQuic(client *QuicClient, sc *socks.SocksConn, id string) {

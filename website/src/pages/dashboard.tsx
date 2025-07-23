@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Activity,
   TrendingUp,
@@ -11,7 +10,7 @@ import {
   Database,
 } from "lucide-react";
 import Link from "next/link";
-import { NodeStats, EarningsDay } from "../types";
+import { NodeStats } from "../types";
 import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
 import { StatsCard } from "../components/StatsCard";
 import { EarningsChart } from "../components/EarningsChart";
@@ -77,7 +76,7 @@ export default function TurboNodeDashboard() {
                 </span>
                 {error && (
                   <span className="text-xs text-red-400 ml-2">
-                    Error: {error}
+                    {error}
                   </span>
                 )}
               </div>
@@ -203,13 +202,7 @@ export default function TurboNodeDashboard() {
         </div>
 
         <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Turbo Node Runner • Earn passive income by sharing bandwidth</p>
-          <p className="mt-2">
-            {walletConnected 
-              ? `Live data from Supabase • ${supabaseConnected ? 'Realtime updates active' : 'Realtime disconnected'}`
-              : 'Connect wallet to see live data • Using demo data'
-            }
-          </p>
+          <p>Turbo Node • Earn passive income by sharing bandwidth</p>
         </div>
       </main>
     </div>

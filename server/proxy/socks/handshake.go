@@ -25,7 +25,6 @@ const (
 )
 
 func HandleSocksHandshake(conn net.Conn) (string, int, map[string]string, error) {
-	// Read SOCKS version and number of auth methods
 	header := make([]byte, 2)
 	if _, err := io.ReadFull(conn, header); err != nil {
 		return "", 0, nil, err
@@ -57,7 +56,7 @@ func HandleSocksHandshake(conn net.Conn) (string, int, map[string]string, error)
 		return "", 0, nil, err
 	}
 
-	authenticated, client, err := Authenticate(conn)
+	authenticated, params, err := Authenticate(conn)
 	if err != nil || !authenticated {
 		return "", 0, nil, errors.New("authentication failed")
 	}
@@ -115,5 +114,5 @@ func HandleSocksHandshake(conn net.Conn) (string, int, map[string]string, error)
 	}
 	targetPort = int(binary.BigEndian.Uint16(portBytes))
 
-	return targetAddr, targetPort, client, nil
+	return targetAddr, targetPort, params, nil
 }

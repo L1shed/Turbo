@@ -17,6 +17,7 @@ func main() {
 	go conn.ConnectQuicServer()
 
 	systray.Run(onReady, nil)
+	select {}
 }
 
 func onReady() {

@@ -16,13 +16,11 @@ import (
 )
 
 type Message struct {
-	Type   string `json:"type"`
-	ID     string `json:"id"`
-	Host   string `json:"host,omitempty"`
-	Port   int    `json:"port,omitempty"`
-	Data   string `json:"data,omitempty"`
-	Status string `json:"status,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Type string `json:"type"`
+	ID   string `json:"id"`
+	Host string `json:"host,omitempty"`
+	Port int    `json:"port,omitempty"`
+	Data string `json:"data,omitempty"`
 }
 
 var (
@@ -39,9 +37,8 @@ type QuicClient struct {
 	mutex      sync.Mutex
 	socksConns map[string]*socks.SocksConn
 	socksMutex sync.Mutex
-	respChans  map[string]chan Message
-	respMutex  sync.Mutex
 	lastPing   time.Time
+	lastPingID string
 	Metrics    *Metrics
 	Stats      *ClientStats
 }
@@ -92,7 +89,6 @@ func handleQuicConnection(conn quic.Connection) {
 		conn:       conn,
 		stream:     stream,
 		socksConns: make(map[string]*socks.SocksConn),
-		respChans:  make(map[string]chan Message),
 		lastPing:   time.Now(),
 		Metrics: &Metrics{
 			Reliability: 0.7,
@@ -131,13 +127,6 @@ func quicReader(client *QuicClient) {
 		}
 
 		switch msg.Type {
-		case "connect_response":
-			client.respMutex.Lock()
-			if ch, ok := client.respChans[msg.ID]; ok {
-				ch <- msg
-				delete(client.respChans, msg.ID)
-			}
-			client.respMutex.Unlock()
 		case "data":
 			client.socksMutex.Lock()
 			if sc, ok := client.socksConns[msg.ID]; ok {
@@ -176,4 +165,24 @@ func (c *QuicClient) SendMessage(msg Message) error {
 
 	_, err = c.stream.Write(data)
 	return err
+}
+
+func (c *QuicClient) Kick(reason string) {
+	c.conn.CloseWithError(0, reason)
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.stream.Close()
+
+	for id, sc := range c.socksConns {
+		sc.Conn.Close()
+		delete(c.socksConns, id)
+	}
+
+	QuicMutex.Lock()
+	delete(QuicClients, c.id)
+	QuicMutex.Unlock()
+
+	log.Printf("Kicked QUIC client %s for \"%s\"", c.id, reason)
 }

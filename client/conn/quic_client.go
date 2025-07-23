@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"runtime"
 	"sync"
 	"time"
 
@@ -15,13 +16,11 @@ import (
 )
 
 type Message struct {
-	Type   string `json:"type"`
-	ID     string `json:"id"`
-	Host   string `json:"host,omitempty"`
-	Port   int    `json:"port,omitempty"`
-	Data   string `json:"data,omitempty"`
-	Status string `json:"status,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Type string `json:"type"`
+	ID   string `json:"id"`
+	Host string `json:"host,omitempty"`
+	Port int    `json:"port,omitempty"`
+	Data string `json:"data,omitempty"`
 }
 
 type Connection struct {
@@ -36,6 +35,11 @@ var (
 	clientConns = make(map[string]*Connection)
 	clientMutex sync.Mutex
 )
+
+/* On disconnect:
+Waits for 5 seconds 2 times
+Then waits for 5 minutes forever
+*/
 
 func ConnectQuicServer() {
 	connectionAttempts := 0
@@ -80,11 +84,24 @@ func ConnectQuicServer() {
 		quicMutex.Unlock()
 		connectionAttempts = 0
 
+		type UsageStats struct {
+			Timestamp int64
+			OS        string
+		}
+		usageData, _ := json.Marshal(UsageStats{
+			Timestamp: time.Now().Unix(),
+			OS:        runtime.GOOS,
+		})
+		sendMessage(&Message{
+			Type: "usage_stats",
+			Data: string(usageData),
+		})
+
 		quicReader(stream)
 
 		log.Println("QUIC connection closed, reconnecting...")
 
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -96,7 +113,6 @@ func quicReader(stream quic.Stream) {
 		err := decoder.Decode(&msg)
 		if err != nil {
 			log.Println("QUIC read error:", err)
-
 			clientMutex.Lock()
 			for id, cc := range clientConns {
 				cc.conn.Close()
@@ -107,8 +123,6 @@ func quicReader(stream quic.Stream) {
 
 			return
 		}
-
-		log.Println("Received message:", msg.Type)
 
 		switch msg.Type {
 		case "connect":
@@ -125,6 +139,7 @@ func quicReader(stream quic.Stream) {
 			clientMutex.Lock()
 			if cc, ok := clientConns[msg.ID]; ok {
 				cc.conn.Close()
+				close(cc.dataChan)
 				delete(clientConns, msg.ID)
 			}
 			clientMutex.Unlock()
@@ -167,15 +182,16 @@ func sendMessage(msg *Message) error {
 
 func handleConnect(msg Message) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", msg.Host, msg.Port))
-	respMsg := Message{Type: "connect_response", ID: msg.ID}
+
+	data, _ := base64.StdEncoding.DecodeString(msg.Data)
+	_, err = conn.Write(data)
+
 	if err != nil {
-		respMsg.Status = "failure"
-		respMsg.Error = err.Error()
-		sendMessage(&respMsg)
+		log.Printf("Failed to connect to %s:%d: %v", msg.Host, msg.Port, err)
+		sendCloseMessage(msg.ID)
 		return
 	}
-	respMsg.Status = "success"
-	sendMessage(&respMsg)
+	log.Printf("to-to %s:%d", msg.Host, msg.Port)
 
 	dataChan := make(chan []byte, 100)
 	cc := &Connection{conn: conn, dataChan: dataChan}
@@ -185,7 +201,7 @@ func handleConnect(msg Message) {
 	clientMutex.Unlock()
 
 	go relayFromConnToQuic(cc, msg.ID)
-	go relayFromChanToConn(cc, msg.ID) // go or not go?
+	go relayFromChanToConn(cc, msg.ID)
 }
 
 func relayFromConnToQuic(cc *Connection, id string) {
@@ -215,6 +231,10 @@ func sendCloseMessage(id string) {
 	msg := Message{Type: "close", ID: id}
 	sendMessage(&msg)
 	clientMutex.Lock()
-	delete(clientConns, id)
+	if cc, ok := clientConns[id]; ok {
+		cc.conn.Close()
+		close(cc.dataChan)
+		delete(clientConns, id)
+	}
 	clientMutex.Unlock()
 }

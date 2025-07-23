@@ -27,5 +27,5 @@ type SocksConn struct {
 	ID       string
 	Conn     net.Conn
 	DataChan chan []byte
-	Metrics  ConnectionMetrics
+	Metrics  *ConnectionMetrics
 }

@@ -40,6 +40,10 @@ export interface BlogPostMeta {
 }
 
 export function getSortedPostsData(): BlogPostMeta[] {
+  if (!fs.existsSync(postsDirectory)) {
+    return [];
+  }
+  
   const fileNames = fs.readdirSync(postsDirectory);
   const allPostsData = fileNames
     .filter((name) => name.endsWith('.md'))
@@ -69,6 +73,10 @@ export function getSortedPostsData(): BlogPostMeta[] {
 }
 
 export function getAllPostSlugs() {
+  if (!fs.existsSync(postsDirectory)) {
+    return [];
+  }
+  
   const fileNames = fs.readdirSync(postsDirectory);
   return fileNames
     .filter((name) => name.endsWith('.md'))
@@ -83,6 +91,11 @@ export function getAllPostSlugs() {
 
 export async function getPostData(slug: string): Promise<BlogPost> {
   const fullPath = path.join(postsDirectory, `${slug}.md`);
+  
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`Post not found: ${slug}`);
+  }
+  
   const fileContents = fs.readFileSync(fullPath, 'utf8');
 
   const matterResult = matter(fileContents);

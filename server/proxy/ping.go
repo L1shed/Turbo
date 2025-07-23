@@ -3,6 +3,7 @@ package proxy
 import (
 	"log"
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -21,18 +22,28 @@ func ReportPing() {
 	for range ticker.C {
 		for _, client := range QuicClients {
 			client.lastPing = time.Now()
+			if client.lastPingID != "" {
+				client.Kick("ping timeout")
+			}
+
+			pingID := string(rune(rand.Int()))
+
 			err := client.SendMessage(Message{
 				Type: "ping",
+				ID:   pingID,
 			})
 			if err != nil {
 				log.Printf("Failed to send ping: %v", err)
+				client.Kick("ping send error")
 				return
 			}
+			client.lastPingID = pingID
 		}
 	}
 }
 
 func (c *QuicClient) Pong() {
+	c.lastPingID = ""
 	c.Metrics.Latency = float64(int16(time.Since(c.lastPing).Milliseconds()))
 	c.UpdateScore()
 }
