@@ -19,5 +19,8 @@ func LogConnection(sc *socks.SocksConn) {
 
 	data, _ := json.Marshal(sc.Metrics)
 
-	logFile.Write(data)
+	_, err := logFile.Write(data)
+	if err != nil {
+		return
+	}
 }

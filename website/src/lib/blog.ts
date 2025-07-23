@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import { unified } from 'unified';
+import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
@@ -174,15 +174,13 @@ export function getRelatedPosts(currentSlug: string, limit: number = 3): BlogPos
   }
   
   // Find posts with matching tags or category
-  const relatedPosts = allPosts
-    .filter(post => post.slug !== currentSlug)
-    .filter(post => 
-      post.category === currentPost.category ||
-      post.tags.some(tag => currentPost.tags.includes(tag))
-    )
-    .slice(0, limit);
-    
-  return relatedPosts;
+  return allPosts
+      .filter(post => post.slug !== currentSlug)
+      .filter(post =>
+          post.category === currentPost.category ||
+          post.tags.some(tag => currentPost.tags.includes(tag))
+      )
+      .slice(0, limit);
 }
 
 export function calculateReadTime(content: string): string {
@@ -196,9 +194,9 @@ export function calculateReadTime(content: string): string {
   const cleanContent = content
     .replace(/```[\s\S]*?```/g, '') // Remove code blocks
     .replace(/`[^`]+`/g, '') // Remove inline code
-    .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
-    .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
-    .replace(/[#*_~`]/g, '') // Remove markdown formatting
+    .replace(/!\[.*?]\(.*?\)/g, '') // Remove images
+    .replace(/\[.*?]\(.*?\)/g, '') // Remove links
+    .replace(/[#*_~`]/g, '') // Remove Markdown formatting
     .replace(/<[^>]*>/g, '') // Remove HTML tags
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();

@@ -6,14 +6,13 @@ import {
   Settings,
   ExternalLink,
   Wifi,
-  WifiOff,
   Database,
 } from "lucide-react";
 import Link from "next/link";
-import { NodeStats } from "../types";
-import { useSupabaseRealtime } from "../hooks/useSupabaseRealtime";
-import { StatsCard } from "../components/StatsCard";
-import { EarningsChart } from "../components/EarningsChart";
+import { NodeStats } from "@/types";
+import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
+import { StatsCard } from "@/components/StatsCard";
+import { EarningsChart } from "@/components/EarningsChart";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 

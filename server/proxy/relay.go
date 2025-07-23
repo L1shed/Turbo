@@ -74,22 +74,19 @@ func HandleSocksConn(conn net.Conn) {
 		}
 
 		buffer := make([]byte, 32*1024)
-
-		var data string
+		var connData string
 		n, err := sc.Conn.Read(buffer)
 		if err != nil {
 			client.SendCloseMessage(sc.ID)
 			return
 		}
-
 		if n > 0 {
-			data = base64.StdEncoding.EncodeToString(buffer[:n])
-
+			connData = base64.StdEncoding.EncodeToString(buffer[:n])
 			atomic.AddUint64(&client.Stats.BytesSent, uint64(n))
 			atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
 		}
 
-		msg := Message{Type: "connect", ID: id, Host: host, Port: port, Data: data}
+		msg := Message{Type: "connect", ID: id, Host: host, Port: port, Data: connData}
 		err = client.SendMessage(msg)
 		if err != nil {
 			log.Println("WriteJSON error:", err)
