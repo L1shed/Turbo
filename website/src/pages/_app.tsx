@@ -3,6 +3,7 @@ import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
 import WalletProvider from "@/components/WalletProvider";
 import "@/pages/globals.css";
+import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

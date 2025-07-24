@@ -9,6 +9,7 @@ import {
   ArrowRightIcon,
 } from "lucide-react";
 import Layout from "../components/Layout";
+import Head from "next/head";
 
 const WindowsLogo = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -118,22 +119,175 @@ export default function LandingPage() {
   };
 
   return (
-    <Layout theme="dark">
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-            Earn Passive Income
-          </h1>
-          <p className="text-xl md:text-4xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Share your unused bandwidth and earn cryptocurrency rewards with
-            Turbo
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+    <>
+      <Head>
+        <title>Turbo: Earn Passive Income</title>
+      </Head>
+      <Layout theme="dark">
+        {/* Hero Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              Earn Passive Income
+            </h1>
+            <p className="text-xl md:text-4xl text-gray-300 mb-8 max-w-3xl mx-auto">
+              Share your unused bandwidth and earn cryptocurrency rewards with
+              Turbo
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading || !platform}
+                className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-8 py-4 rounded-lg text-lg font-semibold transition-colors flex items-center gap-2 justify-center"
+              >
+                {isDownloading ? (
+                  <>
+                    Downloading...{" "}
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                  </>
+                ) : (
+                  <>
+                    {getOSLogo()}
+                    Download for {getOSName()}
+                  </>
+                )}
+              </button>
+              <button className="border border-gray-600 hover:border-gray-400 px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
+                <Link href="/blog">Learn More <ArrowRightIcon className="w-5 h-5 inline-block" /></Link>
+              </button>
+            </div>
+            {platform && (
+              <p className="text-sm text-gray-400 mt-4">
+                Not on {getOSName()}? see{" "}
+                <Link href="https://github.com/L1shed/Turbo/releases" className="underline">
+                  other platforms
+                </Link>
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-16">
+              Why Choose Turbo?
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <DollarSign className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Passive Income</h3>
+                <p className="text-gray-400">
+                  Earn money 24/7 by sharing your unused internet bandwidth with
+                  our global network
+                </p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Shield className="w-8 h-8 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Secure & Private</h3>
+                <p className="text-gray-400">
+                  Your data remains private and secure with end-to-end encryption
+                  and privacy protection
+                </p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Globe className="w-8 h-8 text-purple-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Global Network</h3>
+                <p className="text-gray-400">
+                  Join thousands of nodes worldwide contributing to a
+                  decentralized internet infrastructure
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-4xl font-bold text-orange-500 mb-2">
+                  100+
+                </div>
+                <div className="text-gray-400">Active Nodes</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-500 mb-2">
+                  $100+
+                </div>
+                <div className="text-gray-400">Total Earnings Paid</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-500 mb-2">
+                  10+
+                </div>
+                <div className="text-gray-400">Countries</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-500 mb-2">
+                  99.9%
+                </div>
+                <div className="text-gray-400">Uptime</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
+                  1
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Install & Setup</h3>
+                <p className="text-gray-400">
+                  Download the Turbo client and set up your node in minutes
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
+                  2
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Share Bandwidth</h3>
+                <p className="text-gray-400">
+                  Your node automatically shares unused bandwidth with the network
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
+                  3
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Earn Rewards</h3>
+                <p className="text-gray-400">
+                  Get paid in cryptocurrency based on your contribution to the
+                  network
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Join <span className="text-orange-500">100+</span> users already earning passive income with Turbo
+            </p>
             <button
               onClick={handleDownload}
               disabled={isDownloading || !platform}
-              className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-8 py-4 rounded-lg text-lg font-semibold transition-colors flex items-center gap-2 justify-center"
+              className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-8 py-4 rounded-lg text-lg font-semibold transition-colors inline-flex items-center gap-2"
             >
               {isDownloading ? (
                 <>
@@ -143,161 +297,12 @@ export default function LandingPage() {
               ) : (
                 <>
                   {getOSLogo()}
-                  Download for {getOSName()}
+                  Download Now
                 </>
               )}
             </button>
-            <button className="border border-gray-600 hover:border-gray-400 px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
-              <Link href="/blog">Learn More <ArrowRightIcon className="w-5 h-5 inline-block" /></Link>
-            </button>
           </div>
-          {platform && (
-            <p className="text-sm text-gray-400 mt-4">
-              Not on {getOSName()}? see{" "}
-              <Link href="https://github.com/L1shed/Turbo/releases" className="underline">
-                 other platforms
-              </Link>
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">
-            Why Choose Turbo?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <DollarSign className="w-8 h-8 text-green-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Passive Income</h3>
-              <p className="text-gray-400">
-                Earn money 24/7 by sharing your unused internet bandwidth with
-                our global network
-              </p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-8 h-8 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Secure & Private</h3>
-              <p className="text-gray-400">
-                Your data remains private and secure with end-to-end encryption
-                and privacy protection
-              </p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Globe className="w-8 h-8 text-purple-500" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Global Network</h3>
-              <p className="text-gray-400">
-                Join thousands of nodes worldwide contributing to a
-                decentralized internet infrastructure
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-orange-500 mb-2">
-                100+
-              </div>
-              <div className="text-gray-400">Active Nodes</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-orange-500 mb-2">
-                $100+
-              </div>
-              <div className="text-gray-400">Total Earnings Paid</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-orange-500 mb-2">
-                10+
-              </div>
-              <div className="text-gray-400">Countries</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-orange-500 mb-2">
-                99.9%
-              </div>
-              <div className="text-gray-400">Uptime</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
-                1
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Install & Setup</h3>
-              <p className="text-gray-400">
-                Download the Turbo client and set up your node in minutes
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
-                2
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Share Bandwidth</h3>
-              <p className="text-gray-400">
-                Your node automatically shares unused bandwidth with the network
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
-                3
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Earn Rewards</h3>
-              <p className="text-gray-400">
-                Get paid in cryptocurrency based on your contribution to the
-                network
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Earning?</h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join <span className="text-orange-500">100+</span> users already earning passive income with Turbo
-          </p>
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading || !platform}
-            className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-8 py-4 rounded-lg text-lg font-semibold transition-colors inline-flex items-center gap-2"
-          >
-            {isDownloading ? (
-              <>
-                Downloading...{" "}
-                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-              </>
-            ) : (
-              <>
-                {getOSLogo()}
-                Download Now
-              </>
-            )}
-          </button>
-        </div>
-      </section>
-    </Layout>
+        </section>
+      </Layout></>
   );
 }
