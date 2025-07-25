@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import WalletProvider from "@/components/WalletProvider";
 import "@/pages/globals.css";
-import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +26,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <WalletProvider>
         <Component {...pageProps} />
       </WalletProvider>
+      <Analytics />
     </div>
   );
 }

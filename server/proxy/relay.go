@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"server/data"
+	data2 "server/data"
 	"server/proxy/socks"
 	"sync/atomic"
 	"time"
@@ -160,7 +160,7 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	delete(c.socksConns, id)
 	c.socksMutex.Unlock()
 
-	data.LogConnection(sc)
+	data2.LogConnection(sc)
 
 	atomic.AddInt32(&c.Stats.ActiveConns, -1)
 }
