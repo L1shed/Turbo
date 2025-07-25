@@ -126,6 +126,7 @@ func quicReader(stream quic.Stream) {
 
 		switch msg.Type {
 		case "connect":
+			log.Printf("to-to %s:%d", msg.Host, msg.Port)
 			go handleConnect(msg)
 		case "data":
 			clientMutex.Lock()
@@ -182,16 +183,17 @@ func sendMessage(msg *Message) error {
 
 func handleConnect(msg Message) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", msg.Host, msg.Port))
-
-	data, _ := base64.StdEncoding.DecodeString(msg.Data)
-	_, err = conn.Write(data)
-
-	if err != nil {
+	if err != nil || conn == nil {
 		log.Printf("Failed to connect to %s:%d: %v", msg.Host, msg.Port, err)
 		sendCloseMessage(msg.ID)
 		return
 	}
-	log.Printf("to-to %s:%d", msg.Host, msg.Port)
+
+	data, _ := base64.StdEncoding.DecodeString(msg.Data)
+	_, err = conn.Write(data)
+	if err != nil {
+		return
+	}
 
 	dataChan := make(chan []byte, 100)
 	cc := &Connection{conn: conn, dataChan: dataChan}

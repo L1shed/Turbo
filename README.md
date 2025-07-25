@@ -27,17 +27,14 @@ flowchart TD
     PaymentGateway[Payment Gateway]
     Blockchain[(Crypto Blockchain)]
     TargetWebsite[Target Website]
-    Website[Website]
-    
-    Website --> |Provides Data| NodeRunner
-%%    Website --> |Provides Data| Blockchain
-    
+    Website[Next.js Website]
+    Supabase[(Supabase PostgreSQL)]
 
-    User --> |Sends Requests| ProxyServer
+    User --> |Sends HTTP/S or SOCKS5 Requests| ProxyServer
     User --> |Buys Credits| PaymentGateway
 
-    ProxyServer --> |Uses for User Auth & Credits| Redis
-    ProxyServer <--> |QUIC Messaging| ClientNode
+    ProxyServer --> |Uses for Auth & Credits| Redis
+    ProxyServer <--> |TLS-encrypted QUIC Messaging| ClientNode
 
     ClientNode --> |Processes Requests To| TargetWebsite
     NodeRunner --> |Operates| ClientNode
@@ -46,6 +43,9 @@ flowchart TD
     PaymentGateway --> |Updates Credits In| Redis
 
     Blockchain --> |Sends Rewards| NodeRunner
+    
+    Website --> |Provides Data| NodeRunner
+    Supabase <--> |Realtime stream| Website
 ```
 
 ## Monetization
