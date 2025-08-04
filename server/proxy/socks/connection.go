@@ -23,7 +23,7 @@ type ConnectionMetrics struct {
 	ThroughputMbps float64 `json:"throughput_mbps"`
 }
 
-type SocksConn struct {
+type ProxyConn struct {
 	ID       string
 	Conn     net.Conn
 	DataChan chan []byte

@@ -124,6 +124,8 @@ func quicReader(stream quic.Stream) {
 			return
 		}
 
+		log.Printf("received %+v", msg.Type)
+
 		switch msg.Type {
 		case "connect":
 			log.Printf("to-to %s:%d", msg.Host, msg.Port)
@@ -179,54 +181,6 @@ func sendMessage(msg *Message) error {
 	}
 
 	return nil
-}
-
-func handleConnect(msg Message) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", msg.Host, msg.Port))
-	if err != nil || conn == nil {
-		log.Printf("Failed to connect to %s:%d: %v", msg.Host, msg.Port, err)
-		sendCloseMessage(msg.ID)
-		return
-	}
-
-	data, _ := base64.StdEncoding.DecodeString(msg.Data)
-	_, err = conn.Write(data)
-	if err != nil {
-		return
-	}
-
-	dataChan := make(chan []byte, 100)
-	cc := &Connection{conn: conn, dataChan: dataChan}
-
-	clientMutex.Lock()
-	clientConns[msg.ID] = cc
-	clientMutex.Unlock()
-
-	go relayFromConnToQuic(cc, msg.ID)
-	go relayFromChanToConn(cc, msg.ID)
-}
-
-func relayFromConnToQuic(cc *Connection, id string) {
-	buf := make([]byte, 4096)
-	for {
-		n, err := cc.conn.Read(buf)
-		if err != nil {
-			sendCloseMessage(id)
-			return
-		}
-		data := base64.StdEncoding.EncodeToString(buf[:n])
-		msg := Message{Type: "data", ID: id, Data: data}
-		sendMessage(&msg)
-	}
-}
-
-func relayFromChanToConn(cc *Connection, id string) {
-	for data := range cc.dataChan {
-		if _, err := cc.conn.Write(data); err != nil {
-			sendCloseMessage(id)
-			return
-		}
-	}
 }
 
 func sendCloseMessage(id string) {

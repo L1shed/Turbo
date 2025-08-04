@@ -10,7 +10,7 @@ const (
 	listenAddr = "127.0.0.1:5520"
 )
 
-// ListenWallet gets data from website through a local POST request
+// Deprecated: ListenWallet gets data from website through a local POST request
 func ListenWallet(allowedOrigin string) {
 	http.HandleFunc("/update-wallet", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)

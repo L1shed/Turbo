@@ -6,7 +6,7 @@ import (
 	"server/proxy/socks"
 )
 
-func LogConnection(sc *socks.SocksConn) {
+func LogConnection(sc *socks.ProxyConn) {
 	if sc == nil || sc.Metrics == nil {
 		return
 	}

@@ -40,7 +40,7 @@ func HandleSocksConn(conn net.Conn) {
 	id := fmt.Sprintf("%d", nextID)
 	nextID++
 	dataChan := make(chan []byte, 100)
-	sc := &socks.SocksConn{
+	sc := &socks.ProxyConn{
 		ID:       id,
 		Conn:     conn,
 		DataChan: dataChan,
@@ -80,17 +80,17 @@ func HandleSocksConn(conn net.Conn) {
 			return
 		}
 
-		client.socksMutex.Lock()
-		client.socksConns[id] = sc
-		client.socksMutex.Unlock()
+		client.userMutex.Lock()
+		client.userConns[id] = sc
+		client.userMutex.Unlock()
 		atomic.AddInt32(&client.Stats.ActiveConns, 1)
 
 		err = client.SendMessage(msg)
 		if err != nil {
 			log.Println("WriteJSON error:", err)
-			client.socksMutex.Lock()
-			delete(client.socksConns, id)
-			client.socksMutex.Unlock()
+			client.userMutex.Lock()
+			delete(client.userConns, id)
+			client.userMutex.Unlock()
 			atomic.AddInt32(&client.Stats.ActiveConns, -1)
 			continue
 		}
@@ -100,9 +100,9 @@ func HandleSocksConn(conn net.Conn) {
 			success = true
 		case <-time.After(connectTimeout):
 			log.Printf("Connection timeout for client %s, retrying with another client", client.id)
-			client.socksMutex.Lock()
-			delete(client.socksConns, id)
-			client.socksMutex.Unlock()
+			client.userMutex.Lock()
+			delete(client.userConns, id)
+			client.userMutex.Unlock()
 			atomic.AddInt32(&client.Stats.ActiveConns, -1)
 			continue
 		}
@@ -118,7 +118,8 @@ func HandleSocksConn(conn net.Conn) {
 	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
 }
 
-func relayFromSocksToQuic(client *QuicClient, sc *socks.SocksConn, id string) {
+// TODO, maybe defer connection close
+func relayFromSocksToQuic(client *QuicClient, sc *socks.ProxyConn, id string) {
 	buf := make([]byte, 4096)
 	for {
 		n, err := sc.Conn.Read(buf)
@@ -139,7 +140,7 @@ func relayFromSocksToQuic(client *QuicClient, sc *socks.SocksConn, id string) {
 	}
 }
 
-func relayFromChanToSocks(client *QuicClient, sc *socks.SocksConn, id string) {
+func relayFromChanToSocks(client *QuicClient, sc *socks.ProxyConn, id string) {
 	for data := range sc.DataChan {
 		_, err := sc.Conn.Write(data)
 		if err != nil {
@@ -155,12 +156,16 @@ func (c *QuicClient) SendCloseMessage(id string) {
 		c.SendMessage(msg)
 	}
 
-	c.socksMutex.Lock()
-	sc := c.socksConns[id]
-	delete(c.socksConns, id)
-	c.socksMutex.Unlock()
+	c.userMutex.Lock()
+	sc := c.userConns[id]
+	delete(c.userConns, id)
+	c.userMutex.Unlock()
 
 	data2.LogConnection(sc)
 
-	atomic.AddInt32(&c.Stats.ActiveConns, -1)
+	if sc != nil {
+		atomic.AddInt32(&c.Stats.ActiveConns, -1)
+		sc.Conn.Close()
+	}
+
 }

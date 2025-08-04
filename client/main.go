@@ -9,7 +9,7 @@ import (
 
 const (
 	VERSION = "0.1.0-experimental"
-	WEBSITE = "http://localhost:3000"
+	WEBSITE = "https://turboproxy.vercel.app"
 )
 
 func main() {

@@ -35,8 +35,8 @@ type QuicClient struct {
 	conn       quic.Connection
 	stream     quic.Stream
 	mutex      sync.Mutex
-	socksConns map[string]*socks.SocksConn
-	socksMutex sync.Mutex
+	userConns  map[string]*socks.ProxyConn
+	userMutex  sync.Mutex
 	lastPing   time.Time
 	lastPingID string
 	Metrics    *Metrics
@@ -85,11 +85,11 @@ func handleQuicConnection(conn quic.Connection) {
 	}
 
 	client := &QuicClient{
-		id:         clientID,
-		conn:       conn,
-		stream:     stream,
-		socksConns: make(map[string]*socks.SocksConn),
-		lastPing:   time.Now(),
+		id:        clientID,
+		conn:      conn,
+		stream:    stream,
+		userConns: make(map[string]*socks.ProxyConn),
+		lastPing:  time.Now(),
 		Metrics: &Metrics{
 			Reliability: 0.7,
 			Score:       50,
@@ -128,23 +128,26 @@ func quicReader(client *QuicClient) {
 
 		switch msg.Type {
 		case "data":
-			client.socksMutex.Lock()
-			if sc, ok := client.socksConns[msg.ID]; ok {
-				if data, err := base64.StdEncoding.DecodeString(msg.Data); err == nil {
+			client.userMutex.Lock()
+			if sc, ok := client.userConns[msg.ID]; ok {
+				data, err := base64.StdEncoding.DecodeString(msg.Data)
+				if err == nil {
 					dataSize := uint64(len(data))
 					atomic.AddUint64(&client.Stats.BytesReceived, dataSize)
 					atomic.AddUint64(&sc.Metrics.BytesReceived, dataSize)
 					sc.DataChan <- data
+				} else {
+					log.Println("WARN: Suspicious data received from client", client.id)
 				}
 			}
-			client.socksMutex.Unlock()
+			client.userMutex.Unlock()
 		case "close":
-			client.socksMutex.Lock()
-			if sc, ok := client.socksConns[msg.ID]; ok {
+			client.userMutex.Lock()
+			if sc, ok := client.userConns[msg.ID]; ok {
 				sc.Conn.Close()
-				delete(client.socksConns, msg.ID)
+				delete(client.userConns, msg.ID)
 			}
-			client.socksMutex.Unlock()
+			client.userMutex.Unlock()
 		case "address":
 			client.Stats.CryptoAddr = msg.ID
 		case "pong":
@@ -175,9 +178,9 @@ func (c *QuicClient) Kick(reason string) {
 
 	c.stream.Close()
 
-	for id, sc := range c.socksConns {
+	for id, sc := range c.userConns {
 		sc.Conn.Close()
-		delete(c.socksConns, id)
+		delete(c.userConns, id)
 	}
 
 	QuicMutex.Lock()

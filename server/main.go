@@ -55,15 +55,16 @@ func main() {
 
 	http.HandleFunc("/stats", website.StatsHandler)
 	payment.Init()
-
 	go http.ListenAndServe(":8080", nil)
+
+	handler := &proxy.HTTPSProxy{}
+	go http.ListenAndServe(":8081", handler)
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true, // Skip verification for self-signed cert
 		Certificates:       []tls.Certificate{generateTLSCert()},
 		NextProtos:         []string{"turbo-proxy"}, // Application protocol
 	}
-
 	err := proxy.StartQuicServer(":8443", tlsConfig)
 	if err != nil {
 		log.Fatal("Failed to start QUIC server:", err)
