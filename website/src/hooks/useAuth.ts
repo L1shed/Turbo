@@ -114,7 +114,6 @@ export function useAuth() {
         console.error('Google sign-in error:', error);
         setAuthState(prev => ({ ...prev, error: error.message, loading: false }));
       }
-      // Note: loading state will be handled by the auth state change listener
     } catch (err) {
       console.error('Unexpected error during Google sign-in:', err);
       setAuthState(prev => ({ 
