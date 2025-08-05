@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAccount } from 'wagmi';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface NodeStats {
   isConnected: boolean;
@@ -20,17 +20,22 @@ export interface EarningsHistoryItem {
 }
 
 export function useSupabaseRealtime() {
-  const { address } = useAccount();
+  const { user, isAuthenticated } = useAuth();
   const [nodeStats, setNodeStats] = useState<NodeStats | null>(null);
   const [earningsHistory, setEarningsHistory] = useState<EarningsHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [hasNodeData, setHasNodeData] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!address) {
+    if (!isAuthenticated || !user) {
+      setNodeStats(null);
+      setEarningsHistory([]);
       setLoading(false);
-      setError('Wallet not connected');
+      setError(null);
+      setHasNodeData(null);
+      setIsConnected(false);
       return;
     }
 
@@ -39,21 +44,39 @@ export function useSupabaseRealtime() {
         setLoading(true);
         setError(null);
 
-        // First, try to fetch existing data
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session) {
+          setError('Authentication session invalid');
+          setHasNodeData(null);
+          return;
+        }
+
         const { data, error: fetchError } = await supabase
           .from('UserData')
           .select('*')
-          .eq('walletAddress', address)
+          .eq('authUserId', user?.id)
           .single();
 
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
           console.error('Fetch error:', fetchError);
-          setError(fetchError.message);
+          console.error('Full error details:', {
+            message: fetchError.message,
+            details: fetchError.details,
+            hint: fetchError.hint,
+            code: fetchError.code
+          });
+          
+          // Special handling for permission errors
+          if (fetchError.message.includes('permission denied') || fetchError.code === '42501') {
+            setError('Database permission error. Please check your Row Level Security policies.');
+          } else {
+            setError(`Database error: ${fetchError.message}`);
+          }
+          setHasNodeData(null);
           return;
         }
 
         if (data) {
-          // Convert database data to NodeStats format
           const stats: NodeStats = {
             isConnected: data.isConnected ?? false,
             totalEarnings: data.totalEarnings ?? 0,
@@ -66,6 +89,7 @@ export function useSupabaseRealtime() {
           };
 
           setNodeStats(stats);
+          setHasNodeData(true);
           
           // Parse earnings history
           if (data.earningsHistory) {
@@ -82,47 +106,16 @@ export function useSupabaseRealtime() {
           
           setIsConnected(true);
         } else {
-          // No data found, create initial record
-          const initialData = {
-            walletAddress: address,
-            username: null,
-            preferences: null,
-            lastLogin: new Date().toISOString(),
-            totalEarnings: 0,
-            todayEarnings: 0,
-            bandwidthUsed: 0,
-            uptime: 0,
-            requestCount: 0,
-            location: 'Unknown',
-            isConnected: false,
-            earningsHistory: JSON.stringify([]),
-          };
-
-          const { error: insertError } = await supabase
-            .from('UserData')
-            .insert(initialData);
-
-          if (insertError) {
-            console.error('Insert error:', insertError);
-            setError(insertError.message);
-          } else {
-            const stats: NodeStats = {
-              isConnected: false,
-              totalEarnings: 0,
-              todayEarnings: 0,
-              bandwidthUsed: 0,
-              uptime: 0,
-              requestCount: 0,
-              location: 'Unknown',
-              timestamp: Date.now(),
-            };
-            setNodeStats(stats);
-            setIsConnected(true);
-          }
+          // No data found - this means no node is set up
+          setNodeStats(null);
+          setEarningsHistory([]);
+          setHasNodeData(false);
+          setIsConnected(true); // We're connected to Supabase, just no node data
         }
       } catch (err) {
         console.error('Error in fetchData:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
+        setHasNodeData(null); // Set to null on error
       } finally {
         setLoading(false);
       }
@@ -139,11 +132,9 @@ export function useSupabaseRealtime() {
           event: '*',
           schema: 'public',
           table: 'UserData',
-          filter: `walletAddress=eq.${address}`,
+          filter: `authUserId=eq.${user?.id}`,
         },
         (payload) => {
-          console.log('Realtime update:', payload);
-          
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const data = payload.new;
             const stats: NodeStats = {
@@ -158,6 +149,7 @@ export function useSupabaseRealtime() {
             };
 
             setNodeStats(stats);
+            setHasNodeData(true);
 
             // Parse earnings history
             if (data.earningsHistory) {
@@ -174,14 +166,13 @@ export function useSupabaseRealtime() {
         }
       )
       .subscribe((status) => {
-        console.log('Subscription status:', status);
         setIsConnected(status === 'SUBSCRIBED');
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [address]);
+  }, [user?.id, isAuthenticated]);
 
-  return { nodeStats, earningsHistory, loading, error, isConnected };
+  return { nodeStats, earningsHistory, loading, error, isConnected, hasNodeData };
 }

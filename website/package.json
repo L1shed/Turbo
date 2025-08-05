@@ -16,15 +16,13 @@
   "dependencies": {
     "@prisma/client": "^6.8.2",
     "@prisma/extension-accelerate": "^2.0.1",
-    "@rainbow-me/rainbowkit": "^2.2.6",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.50.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
-    "@tanstack/react-query": "^5.80.6",
     "@vercel/analytics": "^1.5.0",
-    "@wagmi/connectors": "^5.8.4",
-    "@wagmi/core": "^2.17.2",
-    "@web3modal/wagmi": "^5.1.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gray-matter": "^4.0.3",
@@ -49,9 +47,7 @@
     "remark-rehype": "^11.1.2",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.11",
-    "unified": "^11.0.5",
-    "viem": "^2.30.6",
-    "wagmi": "^2.15.6"
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

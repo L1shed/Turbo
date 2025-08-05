@@ -17,7 +17,6 @@ export default function Layout({ children, theme = "dark" }: LayoutProps) {
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-                  {/* <Zap className="w-5 h-5 text-white" /> */}
                   <img src="/logo.png" alt="Turbo Logo" className="invert brightness-0 filter" />
                 </div>
               <h1 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Turbo</h1>

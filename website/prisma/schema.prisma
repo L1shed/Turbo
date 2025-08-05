@@ -15,8 +15,9 @@ datasource db {
 }
 
 model UserData {
-  walletAddress String   @id @unique
+  authUserId    String   @id @unique // Supabase auth user ID
   username      String?
+  email         String?
   preferences   Json? // Example: { "theme": "dark", "notifications": true }
   lastLogin     DateTime?
 

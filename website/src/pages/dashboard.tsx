@@ -1,63 +1,76 @@
-import {
-  Activity,
-  TrendingUp,
-  Zap,
-  Globe,
-  Settings,
-  ExternalLink,
-  Wifi,
-  Database,
-} from "lucide-react";
-import Link from "next/link";
-import { NodeStats } from "@/types";
-import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
-import { StatsCard } from "@/components/StatsCard";
-import { EarningsChart } from "@/components/EarningsChart";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import React, { useEffect, useState } from "react";
 import Head from "next/head";
-
-const mockNodeStats: NodeStats = {
-  isConnected: true,
-  totalEarnings: 24.57,
-  todayEarnings: 3.42,
-  bandwidthUsed: 156.7,
-  uptime: 99.2,
-  requestCount: 1247,
-  location: "New York, US",
-  timestamp: Date.now(),
-};
+import { Zap } from "lucide-react";
+import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthButtons } from "@/components/AuthButtons";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import { WelcomeScreen } from "@/components/dashboard/WelcomeScreen";
 
 export default function TurboNodeDashboard() {
-  const { isConnected: walletConnected } = useAccount();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const {
     nodeStats,
     earningsHistory,
     loading,
     error,
     isConnected: supabaseConnected,
+    hasNodeData,
   } = useSupabaseRealtime();
 
-  // Use mock data as fallback when wallet is not connected or no data is available
-  const displayStats = nodeStats || mockNodeStats;
-  const displayHistory = earningsHistory.length > 0 ? earningsHistory : [];
+  const [showNoNodePopup, setShowNoNodePopup] = useState(false);
 
-  const getSupabaseStatusIcon = () => {
-    if (loading) {
-      return <Database className="w-4 h-4 text-yellow-500 animate-pulse" />;
+  // Show "No Node setup" popup when user is authenticated but no node data exists
+  useEffect(() => {
+    // Only show popup if we're definitely done loading and have confirmed no node data
+    if (isAuthenticated && !loading && hasNodeData === false) {
+      setShowNoNodePopup(true);
+    } else {
+      setShowNoNodePopup(false);
     }
-    return supabaseConnected ? (
-      <Database className="w-4 h-4 text-green-500" />
-    ) : (
-      <Wifi className="w-4 h-4 text-red-500" />
-    );
-  };
+  }, [isAuthenticated, loading, hasNodeData]);
 
-  const getSupabaseStatusText = () => {
-    if (loading) return "connecting";
-    if (!walletConnected) return "wallet disconnected";
-    return supabaseConnected ? "realtime connected" : "disconnected";
-  };
+  // Show loading state while checking authentication OR while loading data
+  if (authLoading || (isAuthenticated && loading)) {
+    return (
+      <>
+        <Head>
+          <title>Loading... | Turbo</title>
+        </Head>
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <h1 className="text-xl font-semibold mb-2">Loading Dashboard...</h1>
+            <p className="text-gray-400">Please wait while we verify your authentication.</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Head>
+          <title>Login Required | Turbo</title>
+        </Head>
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Zap className="w-8 h-8 text-orange-500" />
+            </div>
+            <h1 className="text-2xl font-bold mb-4">Login Required</h1>
+            <p className="text-gray-300 mb-8">
+              You need to be logged in to access the dashboard. Please sign in with your preferred provider.
+            </p>
+            <AuthButtons className="justify-center" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -65,142 +78,39 @@ export default function TurboNodeDashboard() {
         <title>Turbo Node Dashboard</title>
       </Head>
 
-      <div className="min-h-screen bg-black text-white">
-        <header className="border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-xl font-bold">Turbo Node Dashboard</h1>
-                <div className="flex items-center gap-2 ml-4">
-                  {getSupabaseStatusIcon()}
-                  <span className="text-sm text-gray-400 min-w-[100px]">
-                    {getSupabaseStatusText()}
-                  </span>
-                  {error && (
-                    <span className="text-xs text-red-400 ml-2">
-                      {error}
-                    </span>
-                  )}
-                </div>
-              </div>
+      <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+        {/* Header */}
+        <DashboardHeader />
 
-              <div className="flex items-center gap-4">
-                <nav className="hidden md:flex items-center gap-6 mr-4">
-                  <Link href="/" className="text-gray-300 hover:text-white transition-colors">
-                    Home
-                  </Link>
-                  <Link href="/blog" className="text-gray-300 hover:text-white transition-colors">
-                    Blog
-                  </Link>
-                </nav>
-                <ConnectButton
-                  showBalance={false}
-                  accountStatus={{
-                    smallScreen: "avatar",
-                    largeScreen: "full",
-                  }} />
-              </div>
+        {/* Main Content */}
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <h1 className="text-xl font-semibold mb-2">Loading Dashboard...</h1>
+              <p className="text-gray-400">Fetching your node data...</p>
             </div>
           </div>
-        </header>
+        ) : !nodeStats ? (
+          <WelcomeScreen />
+        ) : (
+          <DashboardContent
+            nodeStats={nodeStats}
+            earningsHistory={earningsHistory}
+            loading={loading}
+            error={error}
+            supabaseConnected={supabaseConnected}
+          />
+        )}
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <div
-              className={`p-4 rounded-xl border transition-all duration-300 ${displayStats.isConnected
-                  ? "bg-green-500/10 border-green-500/30"
-                  : "bg-red-500/10 border-red-500/30"}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${displayStats.isConnected ? "bg-green-500" : "bg-red-500"}`}
-                  ></div>
-                  <div>
-                    <h3 className="font-medium text-white">
-                      Node Status: {displayStats.isConnected ? "Online" : "Offline"}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      Location: {displayStats.location} • Uptime: {displayStats.uptime}%
-                      • Last update:{" "}
-                      {new Date(displayStats.timestamp).toLocaleTimeString()}
-                    </p>
-                    {!walletConnected && (
-                      <p className="text-xs text-yellow-400 mt-1">
-                        Connect your wallet to see live data
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Settings size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatsCard
-              icon={TrendingUp}
-              title="Total Earnings"
-              value={`$${displayStats.totalEarnings.toFixed(2)}`} />
-            <StatsCard
-              icon={Zap}
-              title="Today's Earnings"
-              value={`$${displayStats.todayEarnings.toFixed(2)}`} />
-            <StatsCard
-              icon={Activity}
-              title="Bandwidth Used"
-              value={`${displayStats.bandwidthUsed.toFixed(1)} GB`} />
-            <StatsCard
-              icon={Globe}
-              title="Requests Served"
-              value={displayStats.requestCount.toLocaleString()} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <EarningsChart data={displayHistory} />
-
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">
-                Quick Actions
-              </h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all text-white">
-                  <span>View Detailed Analytics</span>
-                  <ExternalLink size={18} />
-                </button>
-                <button
-                  className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all disabled:opacity-50 text-white"
-                  disabled={!walletConnected}
-                >
-                  <span>Withdraw Earnings</span>
-                  <ExternalLink size={18} />
-                </button>
-                <button className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all text-white">
-                  <span>Node Settings</span>
-                  <Settings size={18} />
-                </button>
-                <button
-                  className="w-full flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all text-white"
-                  disabled={loading}
-                >
-                  <span>
-                    {supabaseConnected ? "Realtime Active" : "Connect to Database"}
-                  </span>
-                  {getSupabaseStatusIcon()}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 text-center text-gray-500 text-sm">
-            <p>Turbo Node • Earn passive income by sharing bandwidth</p>
-          </div>
-        </main>
-      </div></>
+        {/* No Node Setup Popup */}
+        {showNoNodePopup && (
+          <WelcomeScreen 
+            showPopup={true} 
+            onClosePopup={() => setShowNoNodePopup(false)} 
+          />
+        )}
+      </div>
+    </>
   );
 }
