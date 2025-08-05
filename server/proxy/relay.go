@@ -161,7 +161,7 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	delete(c.userConns, id)
 	c.userMutex.Unlock()
 
-	data2.LogConnection(sc)
+	data2.LogSession(sc)
 
 	if sc != nil {
 		atomic.AddInt32(&c.Stats.ActiveConns, -1)

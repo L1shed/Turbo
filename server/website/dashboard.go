@@ -54,8 +54,6 @@ func getClientData(id string, client *proxy.QuicClient) ClientData {
 }
 
 func StatsHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: isolate from online connections
-
 	address := r.URL.Query().Get("address")
 
 	viewData := ViewData{

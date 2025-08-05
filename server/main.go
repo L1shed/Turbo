@@ -55,7 +55,7 @@ func main() {
 
 	http.HandleFunc("/stats", website.StatsHandler)
 	payment.Init()
-	go http.ListenAndServe(":8080", nil)
+	go http.ListenAndServe("127.0.0.1:8080", nil)
 
 	handler := &proxy.HTTPSProxy{}
 	go http.ListenAndServe(":8081", handler)
