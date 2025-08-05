@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"runtime"
 	"sync"
 	"time"
 
@@ -83,19 +82,6 @@ func ConnectQuicServer() {
 		quicStream = stream
 		quicMutex.Unlock()
 		connectionAttempts = 0
-
-		type UsageStats struct {
-			Timestamp int64
-			OS        string
-		}
-		usageData, _ := json.Marshal(UsageStats{
-			Timestamp: time.Now().Unix(),
-			OS:        runtime.GOOS,
-		})
-		sendMessage(&Message{
-			Type: "usage_stats",
-			Data: string(usageData),
-		})
 
 		quicReader(stream)
 
