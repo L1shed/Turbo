@@ -1,6 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { EarningsDay } from '../types';
+import { EarningsDay } from '@/types';
 
 interface EarningsChartProps {
   data: EarningsDay[];
