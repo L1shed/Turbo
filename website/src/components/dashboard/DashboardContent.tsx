@@ -1,12 +1,13 @@
-import React from "react";
-import { Activity, TrendingUp, Zap, Globe, Settings } from "lucide-react";
-import { NodeStats } from "@/types";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { EarningsChart } from "@/components/dashboard/EarningsChart";
+import React from 'react';
+import { Coins, TrendingUp, Activity, Zap } from 'lucide-react';
+import { EarningsChart } from './EarningsChart';
+import { StatsCard } from './StatsCard';
+import { NodeStatus } from './NodeStatus';
+import { NodeStats, EarningsDay } from '@/types';
 
 interface DashboardContentProps {
   nodeStats: NodeStats | null;
-  earningsHistory: any[];
+  earningsHistory: EarningsDay[];
   loading: boolean;
   error: string | null;
   supabaseConnected: boolean;
@@ -14,74 +15,78 @@ interface DashboardContentProps {
 
 export function DashboardContent({ 
   nodeStats, 
-  earningsHistory
+  earningsHistory,
+  error,
+  supabaseConnected 
 }: DashboardContentProps) {
-  const displayHistory = earningsHistory.length > 0 ? earningsHistory : [];
+  const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
+  const formatBytes = (bytes: number) => {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return `${gb.toFixed(2)} GB`;
+  };
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      {/* Node Status Card */}
-      <div className="mb-6">
-        <div
-          className={`p-4 rounded-xl border transition-all duration-300 ${
-            nodeStats?.isConnected
-              ? "bg-green-500/10 border-green-500/30"
-              : "bg-red-500/10 border-red-500/30"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                  nodeStats?.isConnected ? "bg-green-500" : "bg-red-500"
-                }`}
-              ></div>
-              <div>
-                <h3 className="font-medium text-white">
-                  Node Status: {nodeStats?.isConnected ? "Online" : "Offline"}
-                </h3>
-                <p className="text-sm text-gray-400">
-                  Location: {nodeStats?.location || "Unknown"} • Uptime: {nodeStats?.uptime || 0}%
-                  • Last update:{" "}
-                  {nodeStats ? new Date(nodeStats.timestamp).toLocaleTimeString() : "N/A"}
-                </p>
-              </div>
+    <div className="flex-1 p-6 h-full overflow-hidden">
+      {/* Grid Layout: Left side for chart and stats, Right side for node status */}
+      <div className="grid grid-cols-12 gap-6 h-full">
+
+        {/* Left Column - Node Status */}
+        <div className="col-span-3 flex flex-col ">
+          {/* Additional stats at the top of right column */}
+          <div className="mb-6">
+            <StatsCard
+              icon={Coins}
+              title="Total Earnings"
+              value={formatCurrency(nodeStats?.totalEarnings || 0)}
+            />
+          </div>
+
+          {/* Node Status Component */}
+          <div className="flex-1">
+            <NodeStatus 
+              nodeStats={nodeStats} 
+              isConnected={supabaseConnected && !!nodeStats} 
+            />
+          </div>
+        </div>
+        
+        {/* Right Column - Stats and Chart */}
+        <div className="col-span-9 flex flex-col gap-6 h-full">
+          
+          {/* Stats Cards Row */}
+          <div className="grid grid-cols-3 gap-6">
+            <StatsCard
+              icon={TrendingUp}
+              title="Today's Earnings"
+              value={formatCurrency(nodeStats?.todayEarnings || 0)}
+            />
+            <StatsCard
+              icon={Activity}
+              title="Bandwidth Used"
+              value={formatBytes(nodeStats?.bandwidthUsed || 0)}
+            />
+            <StatsCard
+              icon={Zap}
+              title="Requests Served"
+              value={(nodeStats?.requestCount || 0).toLocaleString()}
+            />
+          </div>
+
+          {/* Earnings Chart - Takes remaining space */}
+          <div className="flex-1 min-h-0">
+            <div className="h-full">
+              <EarningsChart data={earningsHistory} />
             </div>
-            <button className="text-gray-400 hover:text-white transition-colors">
-              <Settings size={20} />
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatsCard
-          icon={TrendingUp}
-          title="Total Earnings"
-          value={`$${(nodeStats?.totalEarnings || 0).toFixed(2)}`}
-        />
-        <StatsCard
-          icon={Zap}
-          title="Today's Earnings"
-          value={`$${(nodeStats?.todayEarnings || 0).toFixed(2)}`}
-        />
-        <StatsCard
-          icon={Activity}
-          title="Bandwidth Used"
-          value={`${(nodeStats?.bandwidthUsed || 0).toFixed(1)} GB`}
-        />
-        <StatsCard
-          icon={Globe}
-          title="Requests Served"
-          value={(nodeStats?.requestCount || 0).toLocaleString()}
-        />
-      </div>
-
-      {/* Earnings Chart */}
-      <div className="flex-1">
-        <EarningsChart data={displayHistory} />
-      </div>
+      {/* Error Message */}
+      {error && (
+        <div className="fixed bottom-4 right-4 bg-red-900 border border-red-700 text-red-100 px-4 py-2 rounded-lg">
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
     </div>
   );
 }

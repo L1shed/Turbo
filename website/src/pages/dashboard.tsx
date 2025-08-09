@@ -78,7 +78,7 @@ export default function TurboNodeDashboard() {
         <title>Turbo Node Dashboard</title>
       </Head>
 
-      <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+      <div className="h-screen bg-black text-white flex flex-col">
         {/* Header */}
         <DashboardHeader />
 

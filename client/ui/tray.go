@@ -1,6 +1,7 @@
-package main
+package ui
 
 import (
+	"client/conn"
 	_ "embed"
 	"github.com/getlantern/systray"
 	"log"
@@ -8,21 +9,30 @@ import (
 	"runtime"
 )
 
-//go:embed assets/tray_icon.ico
-var iconData []byte
-
-func setupTray() {
-	systray.SetTemplateIcon(iconData, iconData)
+func SetupTray(websiteUrl string, icon []byte) {
+	systray.SetTemplateIcon(icon, icon)
 	systray.SetTooltip("Turbo running")
 
+	connect := systray.AddMenuItem("Connect", "Connect with your account")
 	dashboard := systray.AddMenuItem("Dashboard", "Open dashboard")
 	quitItem := systray.AddMenuItem("Quit", "Quit the whole app")
+
+	dashboard.Hide()
 
 	go func() {
 		for {
 			select {
+			case <-connect.ClickedCh:
+				port := conn.UIDCollector()
+				err := open("http://localhost:3000" + "/api/desktop-auth?port=" + port)
+				if err != nil {
+					log.Println("Failed to open browser:", err)
+				}
+
+				connect.Hide()
+				dashboard.Show()
 			case <-dashboard.ClickedCh:
-				err := open(WEBSITE)
+				err := open(websiteUrl)
 				if err != nil {
 					log.Println("Failed to open browser:", err)
 				}

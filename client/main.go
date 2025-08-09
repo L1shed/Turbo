@@ -3,17 +3,21 @@ package main
 import (
 	"client/conn"
 	"client/platform"
+	"client/ui"
+	_ "embed"
 	"github.com/getlantern/systray"
 	"log"
 )
 
+//go:embed assets/tray_icon.ico
+var iconData []byte
+
 const (
 	VERSION = "0.1.0-experimental"
-	WEBSITE = "https://turboproxy.vercel.app"
+	WEBSITE = "https://turbo-node.vercel.app"
 )
 
 func main() {
-	go conn.ListenWallet(WEBSITE)
 	go conn.ConnectQuicServer()
 
 	systray.Run(onReady, nil)
@@ -21,7 +25,7 @@ func main() {
 }
 
 func onReady() {
-	setupTray()
+	ui.SetupTray(WEBSITE+"/dashboard", iconData)
 
 	if err := platform.EnableAutoStart(); err != nil {
 		log.Println(err)

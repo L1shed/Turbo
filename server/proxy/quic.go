@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"server/database"
 	"server/proxy/socks"
 	"sync"
 	"sync/atomic"
@@ -152,6 +154,27 @@ func quicReader(client *QuicClient) {
 			client.Stats.CryptoAddr = msg.ID
 		case "pong":
 			client.Pong()
+		case "uid-register":
+			db, err := database.InitDatabase(os.Getenv("DATABASE_URL"))
+			if err != nil {
+				log.Println(err)
+			}
+
+			_, err = database.GetOrCreateUser(db, msg.ID)
+			if err != nil {
+				log.Printf("Failed to ensure user data exists for %s: %v\n", msg.ID, err)
+			} else {
+				log.Printf("User data ensured for %s\n", msg.ID)
+			}
+
+			db.Close()
+
+			/*
+				TODO:
+					- Put Quic client stats into database
+					- Link Distant node with Quic client so that,
+					- Server can update Node stats.
+			*/
 		}
 	}
 }

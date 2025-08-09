@@ -71,4 +71,4 @@ You can run server nodes, connect client nodes, and implement your own reward sy
 
 ## License
 
-By contributing to Turbo, you agree that your contributions will be licensed under the [Apache License](LICENSE).
+By contributing to Turbo, you agree that your contributions will be licensed under the [Apache License](../LICENSE).

@@ -3,6 +3,8 @@ module server
 go 1.23.4
 
 require (
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/lib/pq v1.10.9
 	github.com/quic-go/quic-go v0.52.0
 	github.com/redis/go-redis/v9 v9.7.3
 	golang.org/x/crypto v0.26.0

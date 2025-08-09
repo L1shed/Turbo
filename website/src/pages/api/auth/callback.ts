@@ -35,7 +35,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
     ]);
 
-    // Redirect to dashboard on successful authentication
     return res.redirect('/dashboard');
   } catch (err) {
     console.error('Unexpected error during auth callback:', err);
