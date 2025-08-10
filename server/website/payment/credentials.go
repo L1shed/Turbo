@@ -1,11 +1,10 @@
 package payment
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
-	"golang.org/x/crypto/bcrypt"
+	"log"
 	"math/big"
 	mathrand "math/rand"
 	"server/database"
@@ -117,15 +116,10 @@ func Pay(id string, amount float64) {
 		}
 	})
 
-	rdb := database.Rdb
-	ctx := context.Background()
-
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	rdb.HSet(ctx, "user:"+username, "password", hash, "credits", state.GB*1000)
-
-	err := rdb.Set(ctx, "foo", "bar", 0).Err()
+	err := database.RegisterUser(username, password, int(state.GB*1000))
 	if err != nil {
-		panic(err)
+		log.Printf("Failed to register user %s: %v", username, err)
+		return
 	}
 
 }

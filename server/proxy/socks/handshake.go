@@ -58,7 +58,7 @@ func HandleSocksHandshake(conn net.Conn) (string, int, map[string]string, error)
 
 	authenticated, params, err := Authenticate(conn)
 	if err != nil || !authenticated {
-		return "", 0, nil, errors.New("authentication failed")
+		return "", 0, nil, fmt.Errorf("authentication failed: %e", err)
 	}
 
 	request := make([]byte, 4)

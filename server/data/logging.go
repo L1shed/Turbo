@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/json"
 	"os"
+	"server/database"
 	"server/proxy/socks"
 )
 
@@ -23,4 +24,6 @@ func LogSession(sc *socks.ProxyConn) {
 	if err != nil {
 		return
 	}
+
+	database.PublishFeatures(data)
 }

@@ -1,9 +1,7 @@
 package socks
 
 import (
-	"context"
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"net"
 	"server/database"
@@ -34,6 +32,7 @@ func Authenticate(conn net.Conn) (bool, map[string]string, error) {
 		return false, nil, err
 	}
 	username := string(userBuf)
+	// username is actually the type of proxy , e.g. residential
 
 	passLenBuf := make([]byte, 1)
 	if _, err := io.ReadFull(conn, passLenBuf); err != nil {
@@ -59,13 +58,14 @@ func Authenticate(conn net.Conn) (bool, map[string]string, error) {
 		}
 	}
 
-	storedHash, err := database.Rdb.HGet(context.Background(), "user:"+username, "password").Result()
-	err2 := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(actualPassword))
+	credits, err := database.GetCredits(username, actualPassword)
+	_ = credits
+	// TODO: create local user struct to consume credits
 
 	// Authentication response: version 0x01 + status
-	if err != nil || err2 != nil {
-		//conn.Write([]byte{0x01, GeneralFailure})
-		//return false, nil, errors.New("authentication failed")
+	if err != nil {
+		conn.Write([]byte{0x01, GeneralFailure})
+		return false, nil, err
 	}
 
 	conn.Write([]byte{0x01, SuccessReply})
