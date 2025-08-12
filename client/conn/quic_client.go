@@ -83,6 +83,8 @@ func ConnectQuicServer() {
 		quicMutex.Unlock()
 		connectionAttempts = 0
 
+		sendMessage(&Message{Type: "dummy"})
+
 		quicReader(stream)
 
 		log.Println("QUIC connection closed, reconnecting...")

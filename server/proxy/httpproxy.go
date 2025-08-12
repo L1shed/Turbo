@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-type HTTPSProxy struct {
+type HTTPProxy struct {
 }
 
-func (p *HTTPSProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
+func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	auth, _ := strings.CutPrefix(req.Header.Get("Proxy-Authorization"), "Basic")
 	userPass, _ := base64.StdEncoding.DecodeString(auth)
 

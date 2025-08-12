@@ -118,7 +118,6 @@ func HandleSocksConn(conn net.Conn) {
 	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
 }
 
-// TODO, maybe defer connection close
 func relayFromSocksToQuic(client *QuicClient, sc *socks.ProxyConn, id string) {
 	buf := make([]byte, 4096)
 	for {

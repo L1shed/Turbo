@@ -57,7 +57,7 @@ func main() {
 	payment.Init()
 	go http.ListenAndServe("127.0.0.1:8080", nil)
 
-	handler := &proxy.HTTPSProxy{}
+	handler := &proxy.HTTPProxy{}
 	go http.ListenAndServe(":8081", handler)
 
 	tlsConfig := &tls.Config{

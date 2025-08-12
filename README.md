@@ -1,29 +1,33 @@
 # Turbo
 
-> **Fastest** and **cheapest** ~~decentralized~~ distributed residential Proxy network.
+> **Fastest** and **cheapest** ~~decentralized~~ distributed HQ residential proxy network.
 
 > [!WARNING]
 > This project is in the **experimental** stage
 
 ## Features
 
-1. [x] Client connection quality analysis
+1. [x] Node connection quality analysis
 2. [x] Crypto payment gateway
-3. [x] Redis Auth (proxy logins + GB credits)
+3. [x] Redis Auth & PUB/SUB (Credits, AI detection)
 4. [ ] ~~Chrome Extension for client~~
 5. [ ] AI abnormal traffic detection model
 
 [//]: # (7. [ ] LLM Data Extraction with Cuelang)
-
 ## Global architecture
 
 ```mermaid
 flowchart TD
     User(User)
-    ProxyServer[Proxy Server]
-    Redis[(Redis Database)]
-    ClientNode[Client Node]
-    NodeRunner(Node Runner)
+    subgraph Self-hosted [Self-hosted backend]
+        ProxyServer[Proxy Server]
+        Redis[(Redis Database & Streams)]
+        AI[AI Traffic Analysis] 
+    end
+%%    subgraph Zero-Trust Zone 
+        ClientNode[Client Node]
+        NodeRunner(Node Runner)
+%%    end
     PaymentGateway[Payment Gateway]
     Blockchain[(Crypto Blockchain)]
     TargetWebsite[Target Website]
@@ -32,12 +36,16 @@ flowchart TD
 
     User --> |Sends HTTP/S or SOCKS5 Requests| ProxyServer
     User --> |Buys Credits| PaymentGateway
-
-    ProxyServer --> |Uses for Auth & Credits| Redis
+    
+    ProxyServer --> |Node data update| Supabase
     ProxyServer <--> |TLS-encrypted QUIC Messaging| ClientNode
+    ProxyServer --> |Uses for Auth & Credits| Redis
+    
+    AI --> |Evaluates server connections| Redis
 
     ClientNode --> |Processes Requests To| TargetWebsite
     NodeRunner --> |Operates| ClientNode
+    
 
     PaymentGateway --> |Processes Payments| Blockchain
     PaymentGateway --> |Updates Credits In| Redis
@@ -46,6 +54,8 @@ flowchart TD
     
     Website --> |Provides Data| NodeRunner
     Supabase <--> |Realtime stream| Website
+    
+    
 ```
 
 ## Monetization
@@ -80,20 +90,18 @@ In fact, you can run several nodes on different devices/IPs with the same wallet
 
 ### Reward
 
-Base reward is `$0.10` per GB shared but bonuses may apply such as if:
+Base reward is `$0.10` per GB shared but bonuses apply such as if:
 * Your node has reached a daily connections streak over several days.
 * Your node has a stable _long-term_ connection.
 
 `$0.10` may seem low but the network is small, therefore the handled bandwidth per node is high.
 
-For example, a node shares 0.2 GB/hour of bandwidth.
-At the current price rate we get at least $14.64/month per device if running 24/7.
-
-The reward is paid every day at 00:00 UTC (only if reward > $2).
+For example, a low-end node shares 0.05 GB/hour of bandwidth.
+At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, user can run multiple nodes.
 
 ### Score calculation
 
-The score (up to 100) is based on two factors:
+The score is based on two factors:
 - $L$: Latency, capped on a range from 10ms to 500ms
 - $R$: Reliability
 
@@ -109,7 +117,7 @@ You're free to operate your own server for commercial use.
 
 Run server docker image and connect clients.
 
-For more information, see [Setting Up Development Environment](CONTRIBUTING.md#setting-up-development-environment)
+For more information, see [Setting Up Development Environment](.github/CONTRIBUTING.md#setting-up-development-environment)
 
 
 ## System Design
@@ -125,10 +133,11 @@ sequenceDiagram
     participant Proxy_Client as Node
     participant Internet as Internet
 
-    SOCKS5_Client->>Proxy_Server: 1. SOCKS5 CONNECT request
-    Proxy_Server->>Proxy_Client: 2. Forward request via QUIC
+    SOCKS5_Client->>Proxy_Server: 1. SOCKS5/HTTP CONNECT request
+    Proxy_Server->>Proxy_Client: 2. Forward dest. IP + TLS-encrypted payload via QUIC 
     Proxy_Client->>Internet: 3. Process request & fetch data
-    Internet-->>Proxy_Client: 4. Return response
+    
+    Internet-->>Proxy_Client: 4. Return encrypted response
     Proxy_Client-->>Proxy_Server: 5. Send data via QUIC
     Proxy_Server-->>SOCKS5_Client: 6. Send back to SOCKS5 Client
 ```

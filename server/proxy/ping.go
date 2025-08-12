@@ -16,7 +16,7 @@ type Metrics struct {
 }
 
 func ReportPing() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -35,7 +35,7 @@ func ReportPing() {
 			if err != nil {
 				log.Printf("Failed to send ping: %v", err)
 				client.Kick("ping send error")
-				return
+				continue
 			}
 			client.lastPingID = pingID
 		}

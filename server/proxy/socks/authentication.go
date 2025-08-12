@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"os"
 	"server/database"
 	"strings"
 )
@@ -63,7 +64,7 @@ func Authenticate(conn net.Conn) (bool, map[string]string, error) {
 	// TODO: create local user struct to consume credits
 
 	// Authentication response: version 0x01 + status
-	if err != nil {
+	if err != nil && os.Getenv("DEBUG_MODE") != "1" {
 		conn.Write([]byte{0x01, GeneralFailure})
 		return false, nil, err
 	}
