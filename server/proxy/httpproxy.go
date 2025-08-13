@@ -80,7 +80,7 @@ func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	client.SendMessage(Message{
 		Type: "connect",
 		ID:   id,
-		Host: req.Host,
+		Addr: req.Host,
 		Data: connData,
 	})
 

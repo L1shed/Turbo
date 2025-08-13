@@ -67,7 +67,7 @@ func HandleSocksConn(conn net.Conn) {
 		connData = base64.StdEncoding.EncodeToString(buffer[:n])
 		atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
 	}
-	msg := Message{Type: "connect", ID: id, Host: host, Port: port, Data: connData}
+	msg := Message{Type: "connect", ID: id, Addr: fmt.Sprintf("%s:%d", host, port), Data: connData}
 
 	success := false
 	attempts := 0

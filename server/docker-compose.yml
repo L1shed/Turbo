@@ -6,8 +6,8 @@ services:
       - "1080:1080" # SOCKS5
       - "8081:8081" # HTTP
       - "8080:8080" # stats
-      - "8443:8443" # quic
-      - "8443:8443/udp"
+#      - "8443:8443"
+      - "8443:8443/udp" # quic
     depends_on:
       - redis
     environment:

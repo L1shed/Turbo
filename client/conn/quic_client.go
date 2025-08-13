@@ -17,8 +17,7 @@ import (
 type Message struct {
 	Type string `json:"type"`
 	ID   string `json:"id"`
-	Host string `json:"host,omitempty"`
-	Port int    `json:"port,omitempty"`
+	Addr string `json:"addr,omitempty"`
 	Data string `json:"data,omitempty"`
 }
 
@@ -116,7 +115,7 @@ func quicReader(stream quic.Stream) {
 
 		switch msg.Type {
 		case "connect":
-			log.Printf("to-to %s:%d", msg.Host, msg.Port)
+			log.Println("to-to ", msg.Addr)
 			go handleConnect(msg)
 		case "data":
 			clientMutex.Lock()
@@ -160,7 +159,7 @@ func sendMessage(msg *Message) error {
 		log.Printf("Failed to marshal message of type %s: %v", msg.Type, err)
 		return err
 	}
-	data = append(data, '\n') // Add newline for JSON decoder
+	data = append(data, '\n')
 
 	_, err = quicStream.Write(data)
 	if err != nil {

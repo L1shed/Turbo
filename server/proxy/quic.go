@@ -20,8 +20,8 @@ import (
 type Message struct {
 	Type string `json:"type"`
 	ID   string `json:"id"`
-	Host string `json:"host,omitempty"`
-	Port int    `json:"port,omitempty"`
+	// Addr also contains port of the target website
+	Addr string `json:"addr,omitempty"`
 	Data string `json:"data,omitempty"`
 }
 
