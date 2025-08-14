@@ -79,33 +79,7 @@ jobs:
     - name: Create Windows Installer
       if: matrix.goos == 'windows' && matrix.goarch == 'amd64'
       run: |
-        (
-        echo [Setup]
-        echo AppName=Turbo
-        echo AppVersion=1.0.0
-        echo AppPublisher=Lished
-        echo AppPublisherURL=https://github.com/L1shed
-        echo DefaultDirName={pf}\Turbo
-        echo DefaultGroupName=Turbo
-        echo Compression=lzma2
-        echo SolidCompression=yes
-        echo OutputDir=../dist
-        echo OutputBaseFilename=Turbo-setup
-        echo SetupIconFile=assets/icon.ico
-        echo.
-        echo [Icons]
-        echo Name: "{group}\Turbo"; Filename: "{app}\Turbo.exe"
-        echo Name: "{commondesktop}\Turbo"; Filename: "{app}\Turbo.exe"; Tasks: desktopicon
-        echo.
-        echo [Files]
-        echo Source: "../dist/Turbo.exe"; DestDir: "{app}"; Flags: ignoreversion
-        echo.
-        echo [Tasks]
-        echo Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-        echo.
-        echo [Run]
-        echo Filename: "{app}\Turbo.exe"; Description: "{cm:LaunchProgram,Turbo}"; Flags: nowait postinstall skipifsilent
-        ) > installer.iss
+        cd build
         iscc installer.iss
 
     - name: Build Linux
