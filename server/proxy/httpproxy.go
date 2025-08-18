@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"server/proxy/socks"
+	"server/data"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -24,7 +24,7 @@ func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.Method != "CONNECT" {
-		http.Error(wr, "Please use CONNECT", http.StatusBadRequest)
+		http.Error(wr, "Non-HTTPS websites are not supported yet", http.StatusBadRequest)
 		return
 	}
 
@@ -52,12 +52,12 @@ func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	id := fmt.Sprintf("%d", nextID)
 	nextID++
 	dataChan := make(chan []byte, 100)
-	sc := &socks.ProxyConn{
+	sc := &Connection{
 		ID:       id,
 		Conn:     conn,
 		DataChan: dataChan,
-		Metrics: &socks.ConnectionMetrics{
-			Timestamp: time.Now().Unix(),
+		Metrics: &data.ConnectionMetrics{
+			StartTime: time.Now(),
 			Protocol:  conn.RemoteAddr().Network(),
 		},
 	}

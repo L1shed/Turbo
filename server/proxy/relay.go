@@ -40,12 +40,12 @@ func HandleSocksConn(conn net.Conn) {
 	id := fmt.Sprintf("%d", nextID)
 	nextID++
 	dataChan := make(chan []byte, 100)
-	sc := &socks.ProxyConn{
+	sc := &Connection{
 		ID:       id,
 		Conn:     conn,
 		DataChan: dataChan,
-		Metrics: &socks.ConnectionMetrics{
-			Timestamp: time.Now().Unix(),
+		Metrics: &data2.ConnectionMetrics{
+			StartTime: time.Now(),
 			Protocol:  conn.RemoteAddr().Network(),
 		},
 	}
@@ -118,7 +118,7 @@ func HandleSocksConn(conn net.Conn) {
 	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
 }
 
-func relayFromSocksToQuic(client *QuicClient, sc *socks.ProxyConn, id string) {
+func relayFromSocksToQuic(client *QuicClient, sc *Connection, id string) {
 	buf := make([]byte, 4096)
 	for {
 		n, err := sc.Conn.Read(buf)
@@ -139,7 +139,7 @@ func relayFromSocksToQuic(client *QuicClient, sc *socks.ProxyConn, id string) {
 	}
 }
 
-func relayFromChanToSocks(client *QuicClient, sc *socks.ProxyConn, id string) {
+func relayFromChanToSocks(client *QuicClient, sc *Connection, id string) {
 	for data := range sc.DataChan {
 		_, err := sc.Conn.Write(data)
 		if err != nil {
@@ -160,11 +160,12 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	delete(c.userConns, id)
 	c.userMutex.Unlock()
 
-	data2.LogSession(sc)
-
 	if sc != nil {
+		data2.LogConnection(sc.Metrics)
 		atomic.AddInt32(&c.Stats.ActiveConns, -1)
 		sc.Conn.Close()
+	} else {
+		println("é- double closing")
 	}
 
 }

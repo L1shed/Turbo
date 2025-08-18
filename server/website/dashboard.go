@@ -3,6 +3,7 @@ package website
 import (
 	"fmt"
 	"html/template"
+	"math"
 	"net/http"
 	"server/proxy"
 	"strconv"
@@ -49,7 +50,7 @@ func getClientData(id string, client *proxy.QuicClient) ClientData {
 		TotalBytes:      formatBytes(totalBytes),
 		Ping:            fmt.Sprintf("%.1f ms", client.Metrics.Latency),
 		Score:           fmt.Sprintf("%.0f/100", client.Metrics.Score),
-		EstimatedReward: fmt.Sprintf("$%.4f", float64(totalBytes)/(1024*1024*1024)/0.01), //0. TODO: proper reward calculation
+		EstimatedReward: fmt.Sprintf("$%.4f", float64(totalBytes)/math.Pow10(9)*0.10), //0. TODO: proper reward calculation
 	}
 }
 
@@ -83,7 +84,7 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func formatBytes(bytes uint64) string {
-	const unit = 1024
+	const unit = 1000
 	if bytes < unit {
 		return fmt.Sprintf("%d B", bytes)
 	}

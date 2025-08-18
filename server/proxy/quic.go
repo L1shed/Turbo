@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"server/database"
-	"server/proxy/socks"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -37,7 +36,7 @@ type QuicClient struct {
 	conn       quic.Connection
 	stream     quic.Stream
 	mutex      sync.Mutex
-	userConns  map[string]*socks.ProxyConn
+	userConns  map[string]*Connection
 	userMutex  sync.Mutex
 	lastPing   time.Time
 	lastPingID string
@@ -90,7 +89,7 @@ func handleQuicConnection(conn quic.Connection) {
 		id:        clientID,
 		conn:      conn,
 		stream:    stream,
-		userConns: make(map[string]*socks.ProxyConn),
+		userConns: make(map[string]*Connection),
 		lastPing:  time.Now(),
 		Metrics: &Metrics{
 			Reliability: 0.7,
