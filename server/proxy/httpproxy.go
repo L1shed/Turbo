@@ -2,10 +2,8 @@ package proxy
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/http"
-	"server/data"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -49,41 +47,30 @@ func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	}
 	defer conn.Close()
 
-	id := fmt.Sprintf("%d", nextID)
-	nextID++
-	dataChan := make(chan []byte, 100)
-	sc := &Connection{
-		ID:       id,
-		Conn:     conn,
-		DataChan: dataChan,
-		Metrics: &data.ConnectionMetrics{
-			StartTime: time.Now(),
-			Protocol:  conn.RemoteAddr().Network(),
-		},
-	}
+	pc := CreateConnection(conn)
 
 	buffer := make([]byte, 32*1024)
 	var connData string
-	n, err := sc.Conn.Read(buffer)
+	n, err := pc.Conn.Read(buffer)
 	if err != nil {
 		return
 	}
 	if n > 0 {
 		connData = base64.StdEncoding.EncodeToString(buffer[:n])
-		atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
+		pc.Features.Inbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 	}
 
 	client.userMutex.Lock()
-	client.userConns[id] = sc
+	client.userConns[pc.ID] = pc
 	client.userMutex.Unlock()
 	atomic.AddInt32(&client.Stats.ActiveConns, 1)
 	client.SendMessage(Message{
 		Type: "connect",
-		ID:   id,
+		ID:   pc.ID,
 		Addr: req.Host,
 		Data: connData,
 	})
 
-	go relayFromSocksToQuic(client, sc, sc.ID)
-	relayFromChanToSocks(client, sc, sc.ID)
+	go relayFromSocksToQuic(client, pc)
+	relayFromChanToSocks(client, pc)
 }

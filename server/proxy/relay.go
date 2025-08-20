@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	nextID         int
 	connectTimeout = 5 * time.Second
 )
 
@@ -37,18 +36,7 @@ func HandleSocksConn(conn net.Conn) {
 
 	var client *QuicClient
 
-	id := fmt.Sprintf("%d", nextID)
-	nextID++
-	dataChan := make(chan []byte, 100)
-	sc := &Connection{
-		ID:       id,
-		Conn:     conn,
-		DataChan: dataChan,
-		Metrics: &data2.ConnectionMetrics{
-			StartTime: time.Now(),
-			Protocol:  conn.RemoteAddr().Network(),
-		},
-	}
+	pc := CreateConnection(conn)
 
 	_, err = conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0}) // success
 	if err != nil {
@@ -59,15 +47,15 @@ func HandleSocksConn(conn net.Conn) {
 	// Premake connect message
 	buffer := make([]byte, 32*1024)
 	var connData string
-	n, err := sc.Conn.Read(buffer)
+	n, err := pc.Conn.Read(buffer)
 	if err != nil {
 		return
 	}
 	if n > 0 {
 		connData = base64.StdEncoding.EncodeToString(buffer[:n])
-		atomic.AddUint64(&sc.Metrics.BytesSent, uint64(n))
+		pc.Features.Inbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 	}
-	msg := Message{Type: "connect", ID: id, Addr: fmt.Sprintf("%s:%d", host, port), Data: connData}
+	msg := Message{Type: "connect", ID: pc.ID, Addr: fmt.Sprintf("%s:%d", host, port), Data: connData}
 
 	success := false
 	attempts := 0
@@ -81,7 +69,7 @@ func HandleSocksConn(conn net.Conn) {
 		}
 
 		client.userMutex.Lock()
-		client.userConns[id] = sc
+		client.userConns[pc.ID] = pc
 		client.userMutex.Unlock()
 		atomic.AddInt32(&client.Stats.ActiveConns, 1)
 
@@ -89,19 +77,19 @@ func HandleSocksConn(conn net.Conn) {
 		if err != nil {
 			log.Println("WriteJSON error:", err)
 			client.userMutex.Lock()
-			delete(client.userConns, id)
+			delete(client.userConns, pc.ID)
 			client.userMutex.Unlock()
 			atomic.AddInt32(&client.Stats.ActiveConns, -1)
 			continue
 		}
 
 		select {
-		case <-sc.DataChan:
+		case <-pc.DataChan:
 			success = true
 		case <-time.After(connectTimeout):
 			log.Printf("Connection timeout for client %s, retrying with another client", client.id)
 			client.userMutex.Lock()
-			delete(client.userConns, id)
+			delete(client.userConns, pc.ID)
 			client.userMutex.Unlock()
 			atomic.AddInt32(&client.Stats.ActiveConns, -1)
 			continue
@@ -109,8 +97,8 @@ func HandleSocksConn(conn net.Conn) {
 
 		if success {
 			atomic.AddUint64(&client.Stats.BytesSent, uint64(n))
-			go relayFromSocksToQuic(client, sc, sc.ID)
-			relayFromChanToSocks(client, sc, sc.ID)
+			go relayFromSocksToQuic(client, pc)
+			relayFromChanToSocks(client, pc)
 			return
 		}
 	}
@@ -118,32 +106,34 @@ func HandleSocksConn(conn net.Conn) {
 	conn.Write([]byte{5, 1, 0, 1, 0, 0, 0, 0, 0, 0})
 }
 
-func relayFromSocksToQuic(client *QuicClient, sc *Connection, id string) {
+func relayFromSocksToQuic(client *QuicClient, pc *Connection) {
 	buf := make([]byte, 4096)
 	for {
-		n, err := sc.Conn.Read(buf)
+		n, err := pc.Conn.Read(buf)
 		if err != nil {
-			client.SendCloseMessage(id)
+			client.SendCloseMessage(pc.ID)
 			return
 		}
 
 		dataSize := uint64(n)
 		atomic.AddUint64(&client.Stats.BytesSent, dataSize)
-		atomic.AddUint64(&sc.Metrics.BytesSent, dataSize)
+		pc.Features.Outbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 
 		data := base64.StdEncoding.EncodeToString(buf[:n])
-		msg := Message{Type: "data", ID: id, Data: data}
+		msg := Message{Type: "data", ID: pc.ID, Data: data}
 		if client.conn != nil {
 			client.SendMessage(msg)
 		}
 	}
 }
 
-func relayFromChanToSocks(client *QuicClient, sc *Connection, id string) {
-	for data := range sc.DataChan {
-		_, err := sc.Conn.Write(data)
+func relayFromChanToSocks(client *QuicClient, pc *Connection) {
+	for data := range pc.DataChan {
+		n, err := pc.Conn.Write(data)
+		atomic.AddUint64(&client.Stats.BytesReceived, uint64(n))
+		pc.Features.Inbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 		if err != nil {
-			client.SendCloseMessage(id)
+			client.SendCloseMessage(pc.ID)
 			return
 		}
 	}
@@ -161,7 +151,7 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	c.userMutex.Unlock()
 
 	if sc != nil {
-		data2.LogConnection(sc.Metrics)
+		go data2.LogConnection(sc.Features)
 		atomic.AddInt32(&c.Stats.ActiveConns, -1)
 		sc.Conn.Close()
 	} else {
