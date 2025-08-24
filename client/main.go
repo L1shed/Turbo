@@ -5,8 +5,9 @@ import (
 	"client/platform"
 	"client/ui"
 	_ "embed"
-	"github.com/getlantern/systray"
 	"log"
+
+	"github.com/getlantern/systray"
 )
 
 //go:embed assets/tray_icon.ico
@@ -21,11 +22,10 @@ func main() {
 	go conn.ConnectQuicServer()
 
 	systray.Run(onReady, nil)
-	select {}
 }
 
 func onReady() {
-	ui.SetupTray(WEBSITE+"/dashboard", iconData)
+	ui.SetupTray(WEBSITE, iconData)
 
 	if err := platform.EnableAutoStart(); err != nil {
 		log.Println(err)

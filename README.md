@@ -58,13 +58,9 @@ flowchart TD
     
 ```
 
-## Monetization
+## Run a Node
 
-Earn passive crypto rewards for sharing your unused Internet bandwidth.
-
-### Run a Client Node
-
-Start earning today by running client node in the background.
+The Turbo client node is a lightweight process that runs in the background and that lets you earn passive crypto rewards for sharing your unused Internet bandwidth.
 
 #### Compatibility
 
@@ -79,16 +75,16 @@ Start earning today by running client node in the background.
 
 - Download the [latest release](https://github.com/L1shed/Turbo/releases) for your platform.
 - Open the downloaded executable — a new icon will appear in your system tray.
-- Click on the icon and select **"Dashboard"**.
+- Click on the icon and select **"Connect"** to pair with your account.
 
 ![img.png](.github/assets/img.png)
-- A page will open where you can link your wallet address via **WalletConnect** or enter it manually.
+- A page will open, if authentication is successful, you will be redirected to the dashboard and your new node will appear in the nodes list.
 
-After that, you will be able to see your node(s) score, shared bandwidth and reward.
+  You can add an unlimited amount of nodes as long as they are on different networks/IPs.
 
-In fact, you can run several nodes on different devices/IPs with the same wallet.
+Congratulations, your node is now earning passively, check out your dashboard regularly!
 
-### Reward
+### Monetization
 
 Base reward is `$0.10` per GB shared but bonuses apply such as if:
 * Your node has reached a daily connections streak over several days.
@@ -99,9 +95,9 @@ Base reward is `$0.10` per GB shared but bonuses apply such as if:
 For example, a low-end node shares 0.05 GB/hour of bandwidth.
 At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, user can run multiple nodes.
 
-### Score calculation
+#### Score calculation
 
-The score is based on two factors:
+Your node score is based on two factors:
 - $L$: Latency, capped on a range from 10ms to 500ms
 - $R$: Reliability
 
@@ -113,9 +109,9 @@ Where $w_L =$ 60% , $w_R =$ 40%
 
 ### Self-host a Server Node
 
-You're free to operate your own server for commercial use.
+You're free to operate your own server for commercial use according to the [Apache 2.0 license](LICENSE).
 
-Run server docker image and connect clients.
+Run server docker image with `docker-compose up` and connect client nodes.
 
 For more information, see [Setting Up Development Environment](.github/CONTRIBUTING.md#setting-up-development-environment)
 
@@ -135,7 +131,7 @@ sequenceDiagram
 
     SOCKS5_Client->>Proxy_Server: 1. SOCKS5/HTTP CONNECT request
     Proxy_Server->>Proxy_Client: 2. Forward dest. IP + TLS-encrypted payload via QUIC 
-    Proxy_Client->>Internet: 3. Process request & fetch data
+    Proxy_Client->>Internet: 3. Process request (TCP level) as 
     
     Internet-->>Proxy_Client: 4. Return encrypted response
     Proxy_Client-->>Proxy_Server: 5. Send data via QUIC

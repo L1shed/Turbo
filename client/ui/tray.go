@@ -2,11 +2,11 @@ package ui
 
 import (
 	"client/conn"
-	_ "embed"
-	"github.com/getlantern/systray"
 	"log"
 	"os/exec"
 	"runtime"
+
+	"github.com/getlantern/systray"
 )
 
 func SetupTray(websiteUrl string, icon []byte) {
@@ -15,6 +15,7 @@ func SetupTray(websiteUrl string, icon []byte) {
 
 	connect := systray.AddMenuItem("Connect", "Connect with your account")
 	dashboard := systray.AddMenuItem("Dashboard", "Open dashboard")
+	systray.AddSeparator()
 	quitItem := systray.AddMenuItem("Quit", "Quit the whole app")
 
 	dashboard.Hide()
@@ -24,7 +25,7 @@ func SetupTray(websiteUrl string, icon []byte) {
 			select {
 			case <-connect.ClickedCh:
 				port := conn.UIDCollector()
-				err := open("http://localhost:3000" + "/api/desktop-auth?port=" + port)
+				err := open(websiteUrl + "/desktop-auth/check?port=" + port)
 				if err != nil {
 					log.Println("Failed to open browser:", err)
 				}
@@ -32,7 +33,7 @@ func SetupTray(websiteUrl string, icon []byte) {
 				connect.Hide()
 				dashboard.Show()
 			case <-dashboard.ClickedCh:
-				err := open(websiteUrl)
+				err := open(websiteUrl + "/dashboard")
 				if err != nil {
 					log.Println("Failed to open browser:", err)
 				}

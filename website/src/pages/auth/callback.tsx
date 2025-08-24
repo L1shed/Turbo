@@ -20,7 +20,25 @@ export default function AuthCallback() {
           return;
         }
 
+        // Check if we have a redirect parameter
+        const { redirect } = router.query;
+        
         if (data.session) {
+          if (redirect && typeof redirect === 'string') {
+            // Validate the redirect URL to prevent open redirect vulnerabilities
+            const isInternalRedirect = !redirect.startsWith('http://') && !redirect.startsWith('https://');
+            
+            // On production, don't allow redirects to localhost
+            const isProduction = process.env.NODE_ENV === 'production';
+            const isLocalhostRedirect = redirect.includes('localhost') || redirect.includes('127.0.0.1');
+            
+            if (isInternalRedirect && !(isProduction && isLocalhostRedirect)) {
+              router.push(redirect);
+              return;
+            }
+          }
+          
+          // Default redirect if no valid redirect parameter
           router.push('/dashboard');
         } else {
           router.push('/');
@@ -32,8 +50,10 @@ export default function AuthCallback() {
       }
     };
 
-    handleAuthCallback();
-  }, [router]);
+    if (router.isReady) {
+      handleAuthCallback();
+    }
+  }, [router.isReady, router]);
 
   if (loading) {
     return (

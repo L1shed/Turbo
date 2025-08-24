@@ -316,3 +316,50 @@
     }
   }
 }
+
+@font-face {
+    font-family: 'Bitstream Iowan Old Style BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style BT'), url('//fonts/bitstream-iowan-old-style-bt-586c36a8d7712.woff') format('woff');
+    }
+    
+
+    @font-face {
+    font-family: 'Bitstream Iowan Old Style Italic BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style Italic BT'), url('//fonts/bitstream-iowan-old-style-italic-bt-586c3740dc396.woff') format('woff');
+    }
+    
+
+    @font-face {
+    font-family: 'Bitstream Iowan Old Style Bold BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style Bold BT'), url('/fonts/bitstream-iowan-old-style-bold-bt-586c371d8d669.woff') format('woff');
+    }
+    
+
+    @font-face {
+    font-family: 'Bitstream Iowan Old Style Bold Italic BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style Bold Italic BT'), url('/fonts/bitstream-iowan-old-style-bold-italic-bt-586c37701cb62.woff') format('woff');
+    }
+    
+
+    @font-face {
+    font-family: 'Bitstream Iowan Old Style Black BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style Black BT'), url('/fonts/bitstream-iowan-old-style-black-bt-586c36e930225.woff') format('woff');
+    }
+    
+
+    @font-face {
+    font-family: 'Bitstream Iowan Old Style Black Italic BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Bitstream Iowan Old Style Black Italic BT'), url('/fonts/bitstream-iowan-old-style-black-italic-bt-586c378f12ca1.woff') format('woff');
+    }

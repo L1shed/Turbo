@@ -99,14 +99,14 @@ export function useAuth() {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (path: string) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(path)}`,
         },
       });
 
