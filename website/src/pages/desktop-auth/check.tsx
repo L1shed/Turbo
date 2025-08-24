@@ -11,8 +11,6 @@ export default function DesktopAuthCheck() {
   const { user, loading, isAuthenticated } = useAuth();
   const [status, setStatus] = useState<'checking' | 'sending' | 'success' | 'error' | 'signup'>('checking');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  
-  
 
   const sendUIDToDesktopApp = async (uid: string, port: string) => {
     try {

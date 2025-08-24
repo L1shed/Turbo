@@ -99,8 +99,10 @@ export function useAuth() {
     }
   };
 
-  const signInWithGoogle = async (path?: string) => {
+  const signInWithGoogle = async (pathOrEvent?: string | React.MouseEvent) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
+    const path = typeof pathOrEvent === 'string' ? pathOrEvent : undefined;
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
