@@ -4,6 +4,7 @@ import OrangeParticles from "../components/landing page/OrangeParticles";
 import StepsSection from "../components/landing page/StepsSection";
 import ScrollingBackgroundTransition from "@/components/landing page/BackgroundTransition";
 import HowItWorksSection from "@/components/landing page/HowItWorks";
+import { ReactLenis } from "lenis/react"
 
 export default function LandingPage() {
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -11,6 +12,7 @@ export default function LandingPage() {
 
   return (
     <main>
+      <ReactLenis root/>
       <section
         className="w-100% h-screen bg-cover bg-center"
         style={{ backgroundImage: "url('/image copy 3.png')" }}

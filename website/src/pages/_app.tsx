@@ -3,7 +3,6 @@ import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "@/pages/globals.css";
-import { ReactLenis} from "lenis/react"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +23,6 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <Component {...pageProps} />
-      <ReactLenis root/>
       <Analytics />
     </div>
   );

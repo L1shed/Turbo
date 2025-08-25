@@ -67,8 +67,8 @@ The Turbo client node is a lightweight process that runs in the background and t
 | Platform | Supported |
 |----------|-----------|
 | Windows  | ✅         |
-| Linux    | ✅         |
 | macOS    | ✅         |
+| Linux    | ✅         |
 | Mobile   | ❌         |
 
 #### Installation
@@ -82,7 +82,7 @@ The Turbo client node is a lightweight process that runs in the background and t
 
   You can add an unlimited amount of nodes as long as they are on different networks/IPs.
 
-Congratulations, your node is now earning passively, check out your dashboard regularly!
+🎉 Congratulations! Your node is now earning passively, check out your dashboard regularly
 
 ### Monetization
 
@@ -92,8 +92,8 @@ Base reward is `$0.10` per GB shared but bonuses apply such as if:
 
 `$0.10` may seem low but the network is small, therefore the handled bandwidth per node is high.
 
-For example, a low-end node shares 0.05 GB/hour of bandwidth.
-At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, user can run multiple nodes.
+For example, an average low-end node shares 0.05 GB/hour of bandwidth.
+At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, users can run multiple nodes.
 
 #### Score calculation
 
@@ -131,7 +131,7 @@ sequenceDiagram
 
     SOCKS5_Client->>Proxy_Server: 1. SOCKS5/HTTP CONNECT request
     Proxy_Server->>Proxy_Client: 2. Forward dest. IP + TLS-encrypted payload via QUIC 
-    Proxy_Client->>Internet: 3. Process request (TCP level) as 
+    Proxy_Client->>Internet: 3. Process request (TCP level) 
     
     Internet-->>Proxy_Client: 4. Return encrypted response
     Proxy_Client-->>Proxy_Server: 5. Send data via QUIC
