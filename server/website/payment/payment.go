@@ -184,6 +184,7 @@ func getCookieState(w http.ResponseWriter, r *http.Request) *State {
 	return state
 }
 
+// Deprecated: removal
 func Init() {
 	http.HandleFunc("/payment/", func(w http.ResponseWriter, r *http.Request) {
 		state := getCookieState(w, r)

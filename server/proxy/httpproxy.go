@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"log"
 	"net/http"
-	"strings"
+	http2 "server/proxy/http"
 	"sync/atomic"
 	"time"
 )
@@ -13,16 +13,31 @@ type HTTPProxy struct {
 }
 
 func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-	auth, _ := strings.CutPrefix(req.Header.Get("Proxy-Authorization"), "Basic")
-	userPass, _ := base64.StdEncoding.DecodeString(auth)
+	valid, params := http2.Authenticate(req)
+	if !valid {
+		wr.Header().Set("Proxy-Authenticate", "Basic realm=\"Turbo Proxy\"")
+		http.Error(wr, "Proxy authentication required", http.StatusProxyAuthRequired)
+		return
+	}
 
-	log.Println(req.RemoteAddr, " ", req.Method, " ", req.URL, "", string(userPass))
+	country := "global"
+	if _, exists := params["country"]; exists {
+		country = params["country"]
+	}
+
 	for k, v := range req.Header {
 		log.Println("Header: ", k, ":", v)
 	}
 
 	if req.Method != "CONNECT" {
-		http.Error(wr, "Non-HTTPS websites are not supported yet", http.StatusBadRequest)
+		http.Error(wr, "Non-HTTPS websites are blocked by default, contact support to unlock", http.StatusBadRequest)
+		return
+	}
+
+	client := FindClientByCountry(country)
+	if client == nil {
+		log.Println("No active clients available in country:", country)
+		http.Error(wr, "No active clients available", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -32,14 +47,6 @@ func (p *HTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		http.Error(wr, "Hijacking not supported", http.StatusInternalServerError)
 		return
 	}
-
-	client := FindAvailableClient()
-	if client == nil {
-		log.Println("No active clients available")
-		http.Error(wr, "No active clients available", http.StatusServiceUnavailable)
-		return
-	}
-
 	conn, _, err := hijacker.Hijack()
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusServiceUnavailable)

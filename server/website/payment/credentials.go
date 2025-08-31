@@ -116,7 +116,7 @@ func Pay(id string, amount float64) {
 		}
 	})
 
-	err := database.RegisterUser(username, password, int(state.GB*1000))
+	err := database.RegisterUser(password, int(state.GB*1000))
 	if err != nil {
 		log.Printf("Failed to register user %s: %v", username, err)
 		return

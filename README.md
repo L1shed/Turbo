@@ -8,10 +8,9 @@
 ## Features
 
 1. [x] Node connection quality analysis
-2. [x] Crypto payment gateway
-3. [x] Redis Auth & PUB/SUB (Credits, AI detection)
-4. [ ] ~~Chrome Extension for client~~
-5. [ ] AI abnormal traffic detection model
+2. [x] Redis Auth & PUB/SUB (Credits, AI detection)
+3. [ ] ~~Chrome Extension for client~~
+4. [ ] AI abnormal traffic detection model
 
 [//]: # (7. [ ] LLM Data Extraction with Cuelang)
 ## Global architecture
@@ -146,7 +145,3 @@ Want to buy proxy access from our network for web-scraping?
 * **Discord**: Find my Discord ID on my GitHub user profile page and DM me.
 
 [//]: # (Join our [**Discord server**]&#40;https://discord.gg/ZqdvQkSEc7&#41; and create a ticket.)
-
-## Data Privacy
-
-We log anonymous data for each SOCKS5 connection to train AI models to detect abnormal and malicious traffic.

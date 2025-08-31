@@ -6,9 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net"
+	"net/http"
 	"os"
 	"server/database"
+	"server/proxy/user"
 	"sync"
 	"time"
 
@@ -105,6 +109,25 @@ func handleQuicConnection(conn quic.Connection) {
 	QuicMutex.Unlock()
 
 	go quicReader(client)
+
+	country := "global"
+	if ip, _, err := net.SplitHostPort(conn.RemoteAddr().String()); err == nil {
+		resp, err := http.Get("http://ip-api.com/csv/" + ip + "?fields=countryCode")
+		if err == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == 200 {
+				body, err := io.ReadAll(resp.Body)
+				if err == nil {
+					if user.IsValidCountryCode(country) {
+						country = string(body)
+					}
+				}
+			}
+		}
+	}
+	client.Stats.CountryCode = country
+
+	updatePools()
 }
 
 func quicReader(client *QuicClient) {

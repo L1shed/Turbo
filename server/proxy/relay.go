@@ -21,13 +21,17 @@ type ClientStats struct {
 	BytesSent     uint64
 	BytesReceived uint64
 	CryptoAddr    string
+	CountryCode   string
 }
 
 func HandleSocksConn(conn net.Conn) {
 	defer conn.Close()
 
-	host, port, _, err := socks.HandleSocksHandshake(conn)
-	// TODO:    ^ params logic
+	host, port, params, err := socks.HandleSocksHandshake(conn)
+	country := "global"
+	if _, exists := params["country"]; exists {
+		country = params["country"]
+	}
 
 	if err != nil {
 		log.Printf("SOCKS handshake failed for %s, %v", conn.RemoteAddr(), err)
@@ -62,9 +66,9 @@ func HandleSocksConn(conn net.Conn) {
 
 	for !success && attempts < 3 {
 		attempts++
-		client = FindAvailableClient()
+		client = FindClientByCountry(country)
 		if client == nil {
-			log.Println("No active clients available")
+			log.Println("No available clients found for this request")
 			return
 		}
 
@@ -111,6 +115,7 @@ func relayFromSocksToQuic(client *QuicClient, pc *Connection) {
 	for {
 		n, err := pc.Conn.Read(buf)
 		if err != nil {
+			pc.Features.Outbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 			client.SendCloseMessage(pc.ID)
 			return
 		}
@@ -133,7 +138,7 @@ func relayFromChanToSocks(client *QuicClient, pc *Connection) {
 		atomic.AddUint64(&client.Stats.BytesReceived, uint64(n))
 		pc.Features.Inbound[time.Since(pc.Features.StartTime).Microseconds()] += uint16(n)
 		if err != nil {
-			client.SendCloseMessage(pc.ID)
+			//client.SendCloseMessage(pc.ID)
 			return
 		}
 	}
@@ -151,7 +156,7 @@ func (c *QuicClient) SendCloseMessage(id string) {
 	c.userMutex.Unlock()
 
 	if sc != nil {
-		go data2.LogConnection(sc.Features)
+		data2.LogConnection(sc.Features)
 		atomic.AddInt32(&c.Stats.ActiveConns, -1)
 		sc.Conn.Close()
 	} else {
