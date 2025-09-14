@@ -1,28 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-
-export interface NodeStats {
-  isConnected: boolean;
-  totalEarnings: number;
-  todayEarnings: number;
-  bandwidthUsed: number;
-  uptime: number;
-  requestCount: number;
-  location: string;
-  timestamp: number;
-}
-
-export interface EarningsHistoryItem {
-  date: string;
-  earnings: number;
-  timestamp: number;
-}
+import { NodeStats, UserStats } from '@/types';
+import { extractEarningsHistory, calculateTodayEarnings, calculateTotalEarnings } from '@/lib/utils';
 
 export function useSupabaseRealtime() {
   const { user, isAuthenticated } = useAuth();
-  const [nodeStats, setNodeStats] = useState<NodeStats | null>(null);
-  const [earningsHistory, setEarningsHistory] = useState<EarningsHistoryItem[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [nodeStats, setNodeStats] = useState<NodeStats[] | null>(null);
+  const [earningsHistory, setEarningsHistory] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -30,8 +16,8 @@ export function useSupabaseRealtime() {
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
+      setUserStats(null);
       setNodeStats(null);
-      setEarningsHistory([]);
       setLoading(false);
       setError(null);
       setHasNodeData(null);
@@ -51,71 +37,86 @@ export function useSupabaseRealtime() {
           return;
         }
 
-        const { data, error: fetchError } = await supabase
-          .from('UserData')
+        // Fetch user data
+        const { data: userData, error: userError } = await supabase
+          .from('users')
           .select('*')
-          .eq('authUserId', user?.id)
+          .eq('id', user?.id)
           .single();
 
-        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-          console.error('Fetch error:', fetchError);
-          console.error('Full error details:', {
-            message: fetchError.message,
-            details: fetchError.details,
-            hint: fetchError.hint,
-            code: fetchError.code
-          });
-          
-          // Special handling for permission errors
-          if (fetchError.message.includes('permission denied') || fetchError.code === '42501') {
-            setError('Database permission error. Please check your Row Level Security policies.');
-          } else {
-            setError(`Database error: ${fetchError.message}`);
-          }
+        if (userError && userError.code !== 'PGRST116') {
+          console.error('User fetch error:', userError);
+          setError(`User data error: ${userError.message}`);
           setHasNodeData(null);
           return;
         }
 
-        if (data) {
-          const stats: NodeStats = {
-            isConnected: data.isConnected ?? false,
-            totalEarnings: data.totalEarnings ?? 0,
-            todayEarnings: data.todayEarnings ?? 0,
-            bandwidthUsed: data.bandwidthUsed ?? 0,
-            uptime: data.uptime ?? 0,
-            requestCount: data.requestCount ?? 0,
-            location: data.location ?? 'Unknown',
-            timestamp: new Date(data.updatedAt).getTime(),
+        // Fetch nodes data
+        const { data: nodesData, error: nodesError } = await supabase
+          .from('nodes')
+          .select('*')
+          .eq('userId', user?.id);
+
+        if (nodesError) {
+          console.error('Nodes fetch error:', nodesError);
+          setError(`Nodes data error: ${nodesError.message}`);
+          setHasNodeData(null);
+          return;
+        }
+
+        if (userData && nodesData) {
+          // Create user stats
+          const userStatsData: UserStats = {
+            id: userData.id,
+            email: userData.email,
+            username: userData.username,
+            totalEarnings: Number(userData.totalEarnings) || 0,
+            todayEarnings: Number(userData.todayEarnings) || 0,
+            createdAt: new Date(userData.createdAt),
+            nodes: []
           };
 
-          setNodeStats(stats);
-          setHasNodeData(true);
-          
-          // Parse earnings history
-          if (data.earningsHistory) {
-            try {
-              const history = typeof data.earningsHistory === 'string' 
-                ? JSON.parse(data.earningsHistory) 
-                : data.earningsHistory;
-              setEarningsHistory(Array.isArray(history) ? history : []);
-            } catch (e) {
-              console.error('Error parsing earnings history:', e);
-              setEarningsHistory([]);
-            }
-          }
+          // Process nodes data
+          const nodesStatsData: NodeStats[] = nodesData.map((node: any) => ({
+            id: node.id,
+            isActive: node.isActive ?? false,
+            dailyEarnings: node.dailyEarnings || {},
+            bandwidthUsed: node.bandwidthUsed,
+            uptimeMinutes: node.uptimeMinutes,
+            createdAt: new Date(node.createdAt),
+            updatedAt: new Date(node.updatedAt),
+            userId: node.userId,
+            isConnected: node.isActive && (Date.now() - new Date(node.updatedAt).getTime() < 5 * 60 * 1000), // 5 minutes
+            location: 'Unknown', // This might come from external API
+            requestCount: 0 // This might be computed or come from external source
+          }));
+
+          // Update calculated earnings in user stats
+          userStatsData.totalEarnings = calculateTotalEarnings(nodesStatsData);
+          userStatsData.todayEarnings = calculateTodayEarnings(nodesStatsData);
+          userStatsData.nodes = nodesStatsData;
+
+          setUserStats(userStatsData);
+          setNodeStats(nodesStatsData);
+          setHasNodeData(nodesStatsData.length > 0);
+
+          // Extract earnings history
+          const history = extractEarningsHistory(nodesStatsData);
+          setEarningsHistory(history);
           
           setIsConnected(true);
         } else {
-          // No data found - this means no node is set up
-          setNodeStats(null);
-          setEarningsHistory([]);
+          // No data found
+          setUserStats(null);
+          setNodeStats([]);
+          setEarningsHistory([0, 0, 0, 0, 0, 0, 0]);
           setHasNodeData(false);
-          setIsConnected(true); // We're connected to Supabase, just no node data
+          setIsConnected(true);
         }
       } catch (err) {
         console.error('Error in fetchData:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        setHasNodeData(null); // Set to null on error
+        setHasNodeData(null);
       } finally {
         setLoading(false);
       }
@@ -123,46 +124,20 @@ export function useSupabaseRealtime() {
 
     fetchData();
 
-    // Set up realtime subscription
+    // Set up realtime subscription for nodes
     const channel = supabase
-      .channel('user-data-changes')
+      .channel('node-data-changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'UserData',
-          filter: `authUserId=eq.${user?.id}`,
+          table: 'nodes',
+          filter: `userId=eq.${user?.id}`,
         },
-        (payload) => {
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const data = payload.new;
-            const stats: NodeStats = {
-              isConnected: data.isConnected ?? false,
-              totalEarnings: data.totalEarnings ?? 0,
-              todayEarnings: data.todayEarnings ?? 0,
-              bandwidthUsed: data.bandwidthUsed ?? 0,
-              uptime: data.uptime ?? 0,
-              requestCount: data.requestCount ?? 0,
-              location: data.location ?? 'Unknown',
-              timestamp: new Date(data.updatedAt).getTime(),
-            };
-
-            setNodeStats(stats);
-            setHasNodeData(true);
-
-            // Parse earnings history
-            if (data.earningsHistory) {
-              try {
-                const history = typeof data.earningsHistory === 'string' 
-                  ? JSON.parse(data.earningsHistory) 
-                  : data.earningsHistory;
-                setEarningsHistory(Array.isArray(history) ? history : []);
-              } catch (e) {
-                console.error('Error parsing earnings history:', e);
-              }
-            }
-          }
+        async (payload) => {
+          // Refetch all data when any node changes
+          await fetchData();
         }
       )
       .subscribe((status) => {
@@ -174,5 +149,5 @@ export function useSupabaseRealtime() {
     };
   }, [user?.id, isAuthenticated]);
 
-  return { nodeStats, earningsHistory, loading, error, isConnected, hasNodeData };
+  return { userStats, nodeStats, earningsHistory, loading, error, isConnected, hasNodeData };
 }

@@ -3,17 +3,19 @@ import { Coins, TrendingUp, Activity, Zap } from 'lucide-react';
 import { EarningsChart } from './EarningsChart';
 import { StatsCard } from './StatsCard';
 import { NodeStatus } from './NodeStatus';
-import { NodeStats, EarningsDay } from '@/types';
+import { NodeStats, UserStats } from '@/types';
 
 interface DashboardContentProps {
-  nodeStats: NodeStats | null;
-  earningsHistory: EarningsDay[];
+  userStats: UserStats | null;
+  nodeStats: NodeStats[] | null;
+  earningsHistory: number[];
   loading: boolean;
   error: string | null;
   supabaseConnected: boolean;
 }
 
 export function DashboardContent({ 
+  userStats,
   nodeStats, 
   earningsHistory,
   error,
@@ -21,9 +23,17 @@ export function DashboardContent({
 }: DashboardContentProps) {
   const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
   const formatBytes = (bytes: number) => {
-    const gb = bytes / (1024 * 1024 * 1024);
-    return `${gb.toFixed(2)} GB`;
+    if (bytes >= 1) {
+      return `${bytes.toFixed(2)} GB`;
+    }
+    const mb = bytes * 1024;
+    return `${mb.toFixed(2)} MB`;
   };
+
+  // Calculate aggregated stats from all nodes
+  const totalBandwidth = nodeStats?.reduce((sum, node) => sum + (node.bandwidthUsed || 0), 0) || 0;
+  const totalRequests = nodeStats?.reduce((sum, node) => sum + (node.requestCount || 0), 0) || 0;
+  const activeNodesCount = nodeStats?.filter(node => node.isActive && node.isConnected).length || 0;
 
   return (
     <div className="flex-1 p-6 h-full overflow-hidden">
@@ -37,7 +47,7 @@ export function DashboardContent({
             <StatsCard
               icon={Coins}
               title="Total Earnings"
-              value={formatCurrency(nodeStats?.totalEarnings || 0)}
+              value={formatCurrency(userStats?.totalEarnings || 0)}
             />
           </div>
 
@@ -45,7 +55,7 @@ export function DashboardContent({
           <div className="flex-1">
             <NodeStatus 
               nodeStats={nodeStats} 
-              isConnected={supabaseConnected && !!nodeStats} 
+              isConnected={supabaseConnected && !!userStats} 
             />
           </div>
         </div>
@@ -58,17 +68,17 @@ export function DashboardContent({
             <StatsCard
               icon={TrendingUp}
               title="Today's Earnings"
-              value={formatCurrency(nodeStats?.todayEarnings || 0)}
+              value={formatCurrency(userStats?.todayEarnings || 0)}
             />
             <StatsCard
               icon={Activity}
               title="Bandwidth Used"
-              value={formatBytes(nodeStats?.bandwidthUsed || 0)}
+              value={formatBytes(totalBandwidth)}
             />
             <StatsCard
               icon={Zap}
               title="Requests Served"
-              value={(nodeStats?.requestCount || 0).toLocaleString()}
+              value={totalRequests.toLocaleString()}
             />
           </div>
 

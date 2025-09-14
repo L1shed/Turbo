@@ -14,25 +14,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model UserData {
-  authUserId    String   @id @unique // Supabase auth user ID
-  username      String?
-  email         String?
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  username  String?  @unique
   preferences   Json? // Example: { "theme": "dark", "notifications": true }
-  lastLogin     DateTime?
 
-  // Fields from NodeStats
-  totalEarnings Float?
-  todayEarnings Float?
-  bandwidthUsed Float? // in GB
-  uptime        Float? // percentage
-  requestCount  Int?
-  location      String?
-  isConnected   Boolean?
-
-  // Field for earnings history
-  earningsHistory Json? // Example: [{ "date": "2023-10-26", "earnings": 3.42, "timestamp": 1698350400000 }]
+  totalEarnings Decimal  @default(0) @db.Decimal(18, 4)
+  todayEarnings Decimal  @default(0) @db.Decimal(18, 4)
 
   createdAt DateTime @default(now())
+  // updatedAt DateTime @updatedAt
+
+  nodes Node[]
+
+  @@map("users")
+}
+
+model Node {
+  id          String   @id @db.Uuid
+  isActive    Boolean  @default(true)
+  
+  // Structure: { "2024-01-15": 25.50, "2024-01-16": 30.25, ... }
+  dailyEarnings Json     @default("{}") @db.JsonB
+  bandwidthUsed Float? // in GB
+  uptimeMinutes Int?
+  
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isActive])
+
+  @@map("nodes")
 }

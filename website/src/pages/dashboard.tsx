@@ -11,6 +11,7 @@ import { WelcomeScreen } from "@/components/dashboard/WelcomeScreen";
 export default function TurboNodeDashboard() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const {
+    userStats,
     nodeStats,
     earningsHistory,
     loading,
@@ -91,10 +92,11 @@ export default function TurboNodeDashboard() {
               <p className="text-gray-400">Fetching your node data...</p>
             </div>
           </div>
-        ) : !nodeStats ? (
+        ) : !userStats ? (
           <WelcomeScreen />
         ) : (
           <DashboardContent
+            userStats={userStats}
             nodeStats={nodeStats}
             earningsHistory={earningsHistory}
             loading={loading}

@@ -23,28 +23,56 @@ export function useAuth() {
   useEffect(() => {
     let mounted = true;
 
+    // Upsert a user row in the `users` table when we have an authenticated user.
+    // This creates the minimal user object on signup/login so other parts of
+    // the app (and Prisma schema) have a corresponding DB row.
+    const upsertUser = async (authUser: User | null) => {
+      if (!authUser) return;
+
+      try {
+        const username = (authUser.user_metadata as any)?.preferred_username || (authUser.user_metadata as any)?.username || null;
+
+        // Construct minimal user record matching Prisma `User` model
+        const userRow: any = {
+          id: authUser.id,
+          email: authUser.email,
+          username,
+          // Keep defaults for earnings and preferences null/empty
+        };
+
+  const { error } = await supabase.from('users').upsert(userRow);
+
+        if (error) {
+          // Don't block auth flow on DB errors, but log for debugging
+          console.error('Error upserting user row:', error);
+        }
+      } catch (err) {
+        console.error('Unexpected error upserting user row:', err);
+      }
+    };
+
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) return;
-        
         if (error) {
           console.error('Error getting initial session:', error);
-          setAuthState(prev => ({ ...prev, error: error.message, loading: false }));
+          if (mounted) setAuthState(prev => ({ ...prev, error: error.message, loading: false }));
         } else {
-          setAuthState(prev => ({
+          if (mounted) setAuthState(prev => ({
             ...prev,
             session,
             user: session?.user ?? null,
             loading: false,
             error: null,
           }));
+
+          // Ensure DB user exists on initial session
+          upsertUser(session?.user ?? null);
         }
       } catch (err) {
-        if (!mounted) return;
         console.error('Unexpected error getting session:', err);
-        setAuthState(prev => ({ 
+        if (mounted) setAuthState(prev => ({ 
           ...prev, 
           error: 'Failed to get session', 
           loading: false 
@@ -66,6 +94,9 @@ export function useAuth() {
         loading: false,
         error: null,
       }));
+
+      // Upsert user whenever auth state provides a user (sign-in / signup / profile update)
+      upsertUser(session?.user ?? null);
     });
 
     return () => {

@@ -1,16 +1,21 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { EarningsDay } from '@/types';
 
 interface EarningsChartProps {
-  data: EarningsDay[];
+  data: number[];
 }
 
 export const EarningsChart: React.FC<EarningsChartProps> = ({ data }) => {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  // Convert array to chart data format
+  const chartData = data.map((earnings, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index)); // 6 days ago to today
+    return {
+      day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      earnings,
+      fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    };
+  });
 
   const formatTooltipValue = (value: number): [string, string] => [`${value.toFixed(2)}`, 'Earnings'];
 
@@ -19,14 +24,13 @@ export const EarningsChart: React.FC<EarningsChartProps> = ({ data }) => {
       <h3 className="text-lg font-semibold mb-6 text-white">Earnings History (7 Days)</h3>
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis 
-              dataKey="date" 
+              dataKey="day" 
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#9CA3AF', fontSize: 12 }}
-              tickFormatter={formatDate}
             />
             <YAxis 
               axisLine={false}
@@ -42,7 +46,7 @@ export const EarningsChart: React.FC<EarningsChartProps> = ({ data }) => {
                 color: '#F9FAFB'
               }}
               formatter={formatTooltipValue}
-              labelFormatter={(value: string) => `Date: ${formatDate(value)}`}
+              labelFormatter={(value: string) => `Date: ${chartData.find(d => d.day === value)?.fullDate || value}`}
             />
             <Line 
               type="monotone" 

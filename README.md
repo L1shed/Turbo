@@ -8,7 +8,7 @@
 ## Features
 
 1. [x] Node connection quality analysis
-2. [x] Redis Auth & PUB/SUB (Credits, AI detection)
+2. [x] Redis Auth & PUB/SUB (Credits, AI stream)
 3. [ ] ~~Chrome Extension for client~~
 4. [ ] AI abnormal traffic detection model
 
