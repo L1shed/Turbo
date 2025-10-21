@@ -1,0 +1,30 @@
+# Build artifacts
+dist/
+build/Turbo
+build/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work.sum
+
+# Temporary files
+*.log
+*.tmp
+/tmp/

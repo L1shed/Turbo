@@ -48,7 +48,7 @@ jobs:
             goarm: 6
             output_name: turbo-client
             asset_name: Turbo_linux-armv6
-            docker_platform: linux/arm/v6
+            docker_platform: linux/arm/v7
 
           - os: ubuntu-latest
             goos: linux

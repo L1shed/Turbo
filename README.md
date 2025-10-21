@@ -68,8 +68,14 @@ The Turbo client node is a lightweight process that runs in the background and t
 | Windows  | ✅         |
 | macOS    | ✅         |
 | Linux    | ✅         |
-| Raspberry Pi | ✅         |
+| Raspberry Pi | ✅ (All models) |
 | Mobile   | ❌         |
+
+**Raspberry Pi Support:**
+- Raspberry Pi Zero/Zero W/1: ARMv6 (32-bit)
+- Raspberry Pi 2/3: ARMv7 (32-bit)
+- Raspberry Pi 4/5/400: ARMv8 (64-bit)
+
 
 #### Installation
 
