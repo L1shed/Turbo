@@ -68,6 +68,7 @@ The Turbo client node is a lightweight process that runs in the background and t
 | Windows  | ✅         |
 | macOS    | ✅         |
 | Linux    | ✅         |
+| Raspberry Pi | ✅         |
 | Mobile   | ❌         |
 
 #### Installation
