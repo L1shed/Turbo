@@ -101,21 +101,13 @@
 {{if not .NotFound}}
 <table>
     <tr>
-        <th>Client</th>
-        <th>Crypto Address</th>
-        <th>Active Since</th>
-        <th>Active Connections</th>
-        <th>Bytes Received</th>
-        <th>Bytes Sent</th>
-        <th>Total Bandwidth</th>
-        <th>Ping</th>
-        <th>Score</th>
-        <th>Estimated Reward</th>
+        {{range .Headers}}
+        <th>{{.}}</th>
+        {{end}}
     </tr>
     {{range .Clients}}
     <tr>
         <td>{{.ID}}</td>
-        <td>{{.CryptoAddr}}</td>
         <td>{{.ActiveTime}}</td>
         <td>{{.ActiveConns}}</td>
         <td>{{.BytesIn}}</td>

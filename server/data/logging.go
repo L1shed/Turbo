@@ -166,6 +166,9 @@ func LogConnection(features *ConnectionFeatures) {
 	}
 	database.PublishFeatures(data)
 
+	LogBytesTransferred(features.Protocol, "in", "unknown", int(inboundBytes))
+	LogBytesTransferred(features.Protocol, "out", "unknown", int(outboundBytes))
+
 	var row []string
 	for _, value := range data {
 		row = append(row, value)

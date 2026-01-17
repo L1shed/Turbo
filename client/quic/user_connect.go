@@ -1,4 +1,4 @@
-package conn
+package quic
 
 import (
 	"io"
@@ -25,7 +25,7 @@ func UIDCollector() string {
 		uid := string(bodyBytes)
 
 		log.Printf("Received UID: %+v\n", uid)
-		sendMessage(&Message{Type: "uid-register", ID: uid})
+		SendMessage(&Message{Type: "uid-register", ID: uid})
 
 		w.WriteHeader(http.StatusOK)
 

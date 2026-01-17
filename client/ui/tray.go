@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"client/conn"
+	"client/quic"
 	"log"
 	"os/exec"
 	"runtime"
@@ -24,7 +24,7 @@ func SetupTray(websiteUrl string, icon []byte) {
 		for {
 			select {
 			case <-connect.ClickedCh:
-				port := conn.UIDCollector()
+				port := quic.UIDCollector()
 				err := open(websiteUrl + "/desktop-auth/check?port=" + port)
 				if err != nil {
 					log.Println("Failed to open browser:", err)

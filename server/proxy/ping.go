@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -20,10 +19,22 @@ func ReportPing() {
 	defer ticker.Stop()
 
 	for range ticker.C {
+		QuicMutex.RLock()
+		clientSnapshot := make([]*QuicClient, 0, len(QuicClients))
 		for _, client := range QuicClients {
+			clientSnapshot = append(clientSnapshot, client)
+		}
+		QuicMutex.RUnlock()
+
+		for _, client := range clientSnapshot {
+			if client.kicked.Load() {
+				continue
+			}
+
 			client.lastPing = time.Now()
 			if client.lastPingID != "" {
 				client.Kick("ping timeout")
+				continue
 			}
 
 			pingID := string(rune(rand.Int()))
@@ -33,7 +44,6 @@ func ReportPing() {
 				ID:   pingID,
 			})
 			if err != nil {
-				log.Printf("Failed to send ping: %v", err)
 				client.Kick("ping send error")
 				continue
 			}
@@ -41,7 +51,6 @@ func ReportPing() {
 		}
 	}
 }
-
 func (c *QuicClient) Pong() {
 	c.lastPingID = ""
 	c.Metrics.Latency = float64(int16(time.Since(c.lastPing).Milliseconds()))
