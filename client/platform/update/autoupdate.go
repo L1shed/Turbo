@@ -1,17 +1,18 @@
-package main
+package update
 
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/mod/semver"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
+
+const VERSION = "0.1.0-experimental"
 
 type GitHubRelease struct {
 	TagName string `json:"tag_name"`
@@ -121,29 +122,4 @@ func downloadUpdate(client http.Client, url string) ([]byte, error) {
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-func replaceExecutable(newExecutable []byte) error {
-	currentExe, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("getting current executable path: %w", err)
-	}
-
-	cacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return fmt.Errorf("getting user cache directory: %w", err)
-	}
-
-	backupPath := filepath.Join(cacheDir, filepath.Base(currentExe)+"_"+VERSION+".backup")
-	if err := os.Rename(currentExe, backupPath); err != nil {
-		return fmt.Errorf("creating backup: %w", err)
-	}
-
-	if err := os.WriteFile(currentExe, newExecutable, 0755); err != nil {
-		os.Rename(backupPath, currentExe)
-		return fmt.Errorf("writing new executable: %w", err)
-	}
-
-	os.Remove(backupPath)
-	return nil
 }

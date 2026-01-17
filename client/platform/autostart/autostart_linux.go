@@ -1,4 +1,4 @@
-package platform
+package autostart
 
 import (
 	"fmt"
@@ -39,19 +39,19 @@ func EnableAutoStart() error {
 
 	err = os.WriteFile("/etc/systemd/system/turbo.service", []byte(serviceContent), 0644)
 
-	err = exec.Command("systemctl daemon-reexec").Run()
+	err = exec.Command("sudo systemctl daemon-reexec").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("systemctl daemon-reload").Run()
+	err = exec.Command("sudo systemctl daemon-reload").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("systemctl enable turbo.service").Run()
+	err = exec.Command("sudo systemctl enable turbo.service").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("systemctl start turbo.service").Run()
+	err = exec.Command("sudo systemctl start turbo.service").Run()
 	if err != nil {
 		return err
 	}
