@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"server/database"
-	"server/discord"
 	"server/proxy"
 	"server/website"
 	"time"

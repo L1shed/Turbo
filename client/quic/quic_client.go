@@ -1,7 +1,6 @@
 package quic
 
 import (
-	"client/browser"
 	"context"
 	"crypto/tls"
 	"encoding/base64"
@@ -142,13 +141,6 @@ func quicReader(stream *quic.Stream) {
 			if err != nil {
 				log.Fatal("error sending pong:", err)
 			}
-		case "browser_screenshot":
-			screenshot := browser.Screenshot(msg.Addr)
-			SendMessage(&Message{
-				Type: "browser_screenshot",
-				ID:   msg.ID,
-				Data: base64.StdEncoding.EncodeToString(screenshot),
-			})
 		}
 	}
 }

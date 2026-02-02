@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"log"
 	"math/rand"
 	"sort"
 	"sync"
@@ -21,9 +22,40 @@ type CountryPool struct {
 	lastUpdated       int64
 }
 
+func FindClient() *QuicClient {
+	if client := FindClientByCountry("global"); client != nil {
+		return client
+	} else {
+		// Logs pool sizes for debugging
+		globalPoolSize := 0
+		if pool, ok := globalClients.Load("global"); ok {
+			globalPool := pool.(*CountryPool)
+			globalPoolSize = len(globalPool.clients)
+		}
+
+		countryPoolSize := 0
+		countryClients.Range(func(key, value any) bool {
+			pool := value.(*CountryPool)
+			countryPoolSize += len(pool.clients)
+			return true
+		})
+
+		log.Printf("DEBUG: No healthy clients found. Global pool size: %d, Country pool size: %d", globalPoolSize, countryPoolSize)
+		return nil
+	}
+}
+
 func FindClientByCountry(countryCode string) *QuicClient {
-	// Lock-free read
-	if pool, ok := countryClients.Load(countryCode); ok {
+	var pool interface{}
+	var ok bool
+
+	if countryCode == "global" {
+		pool, ok = globalClients.Load(countryCode)
+	} else {
+		pool, ok = countryClients.Load(countryCode)
+	}
+
+	if ok {
 		countryPool := pool.(*CountryPool)
 		if client := selectFromPool(countryPool); client != nil {
 			return client

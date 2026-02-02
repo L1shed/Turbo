@@ -14,6 +14,7 @@ import (
 	"server/database"
 	"server/proxy/user"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/quic-go/quic-go"
@@ -21,23 +22,24 @@ import (
 
 type Message struct {
 	Type string `json:"type"`
-	ID   string `json:"id"`
+	ID   string `json:"ID"`
 	// Addr also contains port of the target website
 	Addr string `json:"addr,omitempty"`
 	Data string `json:"data,omitempty"`
 }
 
 var (
-	QuicClients  = make(map[string]*QuicClient)
-	QuicMutex    sync.RWMutex
-	quicListener *quic.Listener
+	QuicClients           = make(map[string]*QuicClient)
+	QuicMutex             sync.RWMutex
+	quicListener          *quic.Listener
+	BrowserScreenshotData = make(chan []byte)
 )
 
 // QuicClient represents a connected QUIC client
 type QuicClient struct {
-	id         string
-	conn       quic.Connection
-	stream     quic.Stream
+	ID         string
+	conn       *quic.Conn
+	stream     *quic.Stream
 	mutex      sync.Mutex
 	userConns  map[string]*Connection
 	userMutex  sync.Mutex
@@ -45,6 +47,7 @@ type QuicClient struct {
 	lastPingID string
 	Metrics    *Metrics
 	Stats      *ClientStats
+	kicked     atomic.Bool
 }
 
 // StartQuicServer initializes the QUIC server
@@ -76,7 +79,7 @@ func acceptQuicConnections(listener *quic.Listener) {
 	}
 }
 
-func handleQuicConnection(conn quic.Connection) {
+func handleQuicConnection(conn *quic.Conn) {
 	clientID := conn.RemoteAddr().String()
 	log.Printf("New QUIC client connected: %s", clientID)
 
@@ -89,7 +92,7 @@ func handleQuicConnection(conn quic.Connection) {
 	}
 
 	client := &QuicClient{
-		id:        clientID,
+		ID:        clientID,
 		conn:      conn,
 		stream:    stream,
 		userConns: make(map[string]*Connection),
@@ -133,8 +136,8 @@ func handleQuicConnection(conn quic.Connection) {
 func quicReader(client *QuicClient) {
 	defer func() {
 		QuicMutex.Lock()
-		delete(QuicClients, client.id)
-		log.Printf("QUIC client disconnected: %s. Remaining clients: %d", client.id, len(QuicClients))
+		delete(QuicClients, client.ID)
+		log.Printf("QUIC client disconnected: %s. Remaining clients: %d", client.ID, len(QuicClients))
 		QuicMutex.Unlock()
 
 		client.stream.Close()
@@ -145,7 +148,10 @@ func quicReader(client *QuicClient) {
 	for {
 		var msg Message
 		if err := decoder.Decode(&msg); err != nil {
-			log.Printf("QUIC read error for client %s: %v", client.id, err)
+			if client.kicked.Load() {
+				return
+			}
+			log.Printf("QUIC read error for client %s: %v", client.ID, err)
 			return
 		}
 
@@ -153,11 +159,10 @@ func quicReader(client *QuicClient) {
 		case "data":
 			client.userMutex.Lock()
 			if sc, ok := client.userConns[msg.ID]; ok {
-				data, err := base64.StdEncoding.DecodeString(msg.Data)
-				if err == nil {
+				if data, err := base64.StdEncoding.DecodeString(msg.Data); err == nil {
 					sc.DataChan <- data
 				} else {
-					log.Println("WARN: Suspicious data received from client", client.id)
+					log.Println("WARN: Suspicious data received from client", client.ID)
 				}
 			}
 			client.userMutex.Unlock()
@@ -178,17 +183,17 @@ func quicReader(client *QuicClient) {
 				log.Println(err)
 			}
 
-			_, err = database.GetOrCreateUser(db, msg.ID)
+			err = database.AddNode(db, msg.ID, client.ID)
 			if err != nil {
-				log.Printf("Failed to ensure user data exists for %s: %v\n", msg.ID, err)
+				log.Printf("Error adding node to %s, %v", client.ID, err)
 			} else {
-				log.Printf("User data ensured for %s\n", msg.ID)
+				log.Printf("Registered Node %s for client %s", msg.ID, client.ID)
 			}
 
 			db.Close()
 
 			/*
-				TODO:
+				TODO(architecture):
 					- Put Quic client stats into database
 					- Link Distant node with Quic client so that,
 					- Server can update Node stats.
@@ -198,6 +203,10 @@ func quicReader(client *QuicClient) {
 }
 
 func (c *QuicClient) SendMessage(msg Message) error {
+	if c == nil {
+		return fmt.Errorf("client is nil")
+	}
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -212,6 +221,10 @@ func (c *QuicClient) SendMessage(msg Message) error {
 }
 
 func (c *QuicClient) Kick(reason string) {
+	if !c.kicked.CompareAndSwap(false, true) {
+		return // Already kicked
+	}
+
 	c.conn.CloseWithError(0, reason)
 
 	c.mutex.Lock()
@@ -225,8 +238,10 @@ func (c *QuicClient) Kick(reason string) {
 	}
 
 	QuicMutex.Lock()
-	delete(QuicClients, c.id)
+	delete(QuicClients, c.ID)
 	QuicMutex.Unlock()
 
-	log.Printf("Kicked QUIC client %s for \"%s\"", c.id, reason)
+	updatePools() // TODO: Inefficient, optimize client erasure
+
+	log.Printf("Kicked QUIC client %s for \"%s\"", c.ID, reason)
 }
