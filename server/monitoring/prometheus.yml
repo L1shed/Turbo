@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  # Monitor Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitor your proxy server
+  - job_name: 'proxy-server'
+    scrape_interval: 5s # High frequency for proxy metrics
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['app:8080']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop # Drop Go runtime metrics to reduce noise
+
+  # Monitor Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']

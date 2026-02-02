@@ -1,4 +1,4 @@
-package conn
+package quic
 
 import "encoding/base64"
 
@@ -12,7 +12,7 @@ func relayFromConnToQuic(cc *Connection, id string) {
 		}
 		data := base64.StdEncoding.EncodeToString(buf[:n])
 		msg := Message{Type: "data", ID: id, Data: data}
-		sendMessage(&msg)
+		SendMessage(&msg)
 	}
 }
 

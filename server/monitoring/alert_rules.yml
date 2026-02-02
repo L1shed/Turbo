@@ -1,0 +1,62 @@
+groups:
+  - name: proxy_alerts
+    rules:
+      # High error rate alert
+      - alert: ProxyHighErrorRate
+        expr: (rate(proxy_errors_total[5m]) / rate(proxy_requests_total[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Proxy error rate is {{ $value | humanizePercentage }} for protocol {{ $labels.protocol }}"
+
+      # High response time alert
+      - alert: ProxyHighResponseTime{
+        expr: histogram_quantile(0.95, rate(proxy_response_time_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.protocol }}"
+
+      # Low client count (might indicate issues)
+      - alert: ProxyLowClientCount
+        expr: sum(proxy_active_clients_total) < 1
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "Low client count"
+          description: "Only {{ $value }} active clients connected"
+
+      # High bandwidth usage
+      - alert: ProxyHighBandwidth
+        expr: rate(proxy_bytes_transferred_total[1m]) > 100000000 # 100MB/s
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High bandwidth usage"
+          description: "Bandwidth usage is {{ $value | humanize }}B/s"
+
+      # Server down
+      - alert: ProxyServerDown
+        expr: up{job="proxy-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Proxy server is down"
+          description: "Proxy server has been down for more than 1 minute"
+
+      # Redis connectivity issues
+      - alert: RedisConnectionIssues
+        expr: redis_connected_clients < 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis connectivity issues"
+          description: "Redis has {{ $value }} connected clients"

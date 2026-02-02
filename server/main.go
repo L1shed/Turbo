@@ -11,10 +11,12 @@ import (
 	"net"
 	"net/http"
 	"server/database"
+	"server/discord"
 	"server/proxy"
 	"server/website"
-	"server/website/payment"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func generateTLSCert() tls.Certificate {
@@ -53,33 +55,40 @@ func generateTLSCert() tls.Certificate {
 func main() {
 	database.InitRedis()
 
+	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/stats", website.StatsHandler)
-	payment.Init()
-	go http.ListenAndServe("127.0.0.1:8080", nil)
-
-	handler := &proxy.HTTPProxy{}
-	go http.ListenAndServe(":8081", handler)
+	go func() {
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatal("Failed to start Prometheus metrics endpoint:", err)
+		}
+	}()
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true, // Skip verification for self-signed cert
 		Certificates:       []tls.Certificate{generateTLSCert()},
 		NextProtos:         []string{"turbo-proxy"}, // Application protocol
 	}
+	log.Println("Starting QUIC server on :8443")
 	err := proxy.StartQuicServer(":8443", tlsConfig)
 	if err != nil {
 		log.Fatal("Failed to start QUIC server:", err)
 	}
 
+	log.Println("Starting SOCKS5 receiver on :1080")
 	listener, err := net.Listen("tcp", ":1080")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to start SOCKS5 receiver:", err)
 	}
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Println(err)
-			continue
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				log.Printf("Couldn't accept SOCKS5 connection: %v", err)
+				continue
+			}
+			go proxy.HandleSocksConn(conn)
 		}
-		go proxy.HandleSocksConn(conn)
-	}
+	}()
+
+	select {}
 }

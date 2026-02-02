@@ -6,12 +6,11 @@ import (
 	"math"
 	"net/http"
 	"server/proxy"
-	"strconv"
 	"sync/atomic"
 	"time"
 )
 
-var templates, _ = template.ParseFiles("./templates/stats.html")
+var templates, _ = template.ParseFiles("./website/templates/stats.html")
 
 type ClientData struct {
 	ID              string
@@ -28,6 +27,7 @@ type ClientData struct {
 
 type ViewData struct {
 	Title    string
+	Headers  []string
 	Clients  []ClientData
 	Address  string
 	NotFound bool
@@ -57,8 +57,22 @@ func getClientData(id string, client *proxy.QuicClient) ClientData {
 func StatsHandler(w http.ResponseWriter, r *http.Request) {
 	address := r.URL.Query().Get("address")
 
+	headers := []string{
+		"Client",
+		"Crypto Address",
+		"Active Since",
+		"Active Connections",
+		"Bytes Received",
+		"Bytes Sent",
+		"Total Bandwidth",
+		"Ping",
+		"Score",
+		"Estimated Reward",
+	}
+
 	viewData := ViewData{
 		Title:   "Client Statistics",
+		Headers: headers,
 		Address: address,
 		Clients: []ClientData{},
 	}
@@ -74,13 +88,15 @@ func StatsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		viewData.NotFound = len(viewData.Clients) == 0
 	} else {
-		i := 1
 		for _, client := range proxy.QuicClients {
-			viewData.Clients = append(viewData.Clients, getClientData("anon"+strconv.Itoa(i), client))
+			viewData.Clients = append(viewData.Clients, getClientData(client.ID, client))
 		}
 	}
 
-	templates.ExecuteTemplate(w, "stats.html", viewData)
+	err := templates.ExecuteTemplate(w, "stats.html", viewData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal Server Error: %v", err), http.StatusInternalServerError)
+	}
 }
 
 func formatBytes(bytes uint64) string {

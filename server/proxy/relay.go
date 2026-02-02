@@ -91,7 +91,7 @@ func HandleSocksConn(conn net.Conn) {
 		case <-pc.DataChan:
 			success = true
 		case <-time.After(connectTimeout):
-			log.Printf("Connection timeout for client %s, retrying with another client", client.id)
+			log.Printf("Connection timeout for client %s, retrying with another client", client.ID)
 			client.userMutex.Lock()
 			delete(client.userConns, pc.ID)
 			client.userMutex.Unlock()

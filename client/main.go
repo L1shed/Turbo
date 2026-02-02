@@ -1,8 +1,9 @@
 package main
 
 import (
-	"client/conn"
-	"client/platform"
+	"client/platform/autostart"
+	"client/platform/update"
+	"client/quic"
 	"client/ui"
 	_ "embed"
 	"log"
@@ -14,12 +15,11 @@ import (
 var iconData []byte
 
 const (
-	VERSION = "0.1.0-experimental"
 	WEBSITE = "https://turbo-node.vercel.app"
 )
 
 func main() {
-	go conn.ConnectQuicServer()
+	go quic.ConnectQuicServer()
 
 	systray.Run(onReady, nil)
 }
@@ -27,11 +27,15 @@ func main() {
 func onReady() {
 	ui.SetupTray(WEBSITE, iconData)
 
-	if err := platform.EnableAutoStart(); err != nil {
+	if err := autostart.EnableAutoStart(); err != nil {
 		log.Println(err)
 	}
 
-	if err := AutoUpdate(); err != nil {
+	if err := update.AutoUpdate(); err != nil {
 		log.Println(err)
+		quic.SendMessage(&quic.Message{
+			Type: "stacktrace",
+			Data: "Auto-update failed: " + err.Error(),
+		})
 	}
 }

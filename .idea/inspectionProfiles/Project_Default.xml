@@ -3,6 +3,9 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
+      <functions>
+        <function importPath="net/url" name="Parse" />
+      </functions>
       <methods>
         <method importPath="html/template" receiver="*Template" name="ParseFiles" />
       </methods>

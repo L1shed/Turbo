@@ -83,7 +83,7 @@ The Turbo client node is a lightweight process that runs in the background and t
 
 🎉 Congratulations! Your node is now earning passively, check out your dashboard regularly
 
-### Monetization
+#### Monetization
 
 Base reward is `$0.10` per GB shared but bonuses apply such as if:
 * Your node has reached a daily connections streak over several days.
@@ -92,7 +92,7 @@ Base reward is `$0.10` per GB shared but bonuses apply such as if:
 `$0.10` may seem low but the network is small, therefore the handled bandwidth per node is high.
 
 For example, an average low-end node shares 0.05 GB/hour of bandwidth.
-At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, users can run multiple nodes.
+At the current price rate we get $3.72/month + bonuses **per node** if running 24/7, users can run multiple nodes on distinct devices.
 
 #### Score calculation
 
@@ -104,7 +104,7 @@ $$
 S = w_L \cdot L + w_R \cdot R
 $$
 
-Where $w_L =$ 60% , $w_R =$ 40%
+Where $w_L =$ 40% , $w_R =$ 60%
 
 ### Self-host a Server Node
 

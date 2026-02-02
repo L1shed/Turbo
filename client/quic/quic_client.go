@@ -1,6 +1,7 @@
-package conn
+package quic
 
 import (
+	"client/browser"
 	"context"
 	"crypto/tls"
 	"encoding/base64"
@@ -27,8 +28,8 @@ type Connection struct {
 }
 
 var (
-	quicConn    quic.Connection
-	quicStream  quic.Stream
+	quicConn    *quic.Conn
+	quicStream  *quic.Stream
 	quicMutex   sync.Mutex
 	clientConns = make(map[string]*Connection)
 	clientMutex sync.Mutex
@@ -82,7 +83,7 @@ func ConnectQuicServer() {
 		quicMutex.Unlock()
 		connectionAttempts = 0
 
-		sendMessage(&Message{Type: "dummy"})
+		SendMessage(&Message{Type: "dummy"})
 
 		quicReader(stream)
 
@@ -92,7 +93,7 @@ func ConnectQuicServer() {
 	}
 }
 
-func quicReader(stream quic.Stream) {
+func quicReader(stream *quic.Stream) {
 	decoder := json.NewDecoder(stream)
 
 	for {
@@ -134,18 +135,25 @@ func quicReader(stream quic.Stream) {
 			}
 			clientMutex.Unlock()
 		case "ping":
-			err := sendMessage(&Message{
+			err := SendMessage(&Message{
 				Type: "pong",
 				ID:   msg.ID,
 			})
 			if err != nil {
 				log.Fatal("error sending pong:", err)
 			}
+		case "browser_screenshot":
+			screenshot := browser.Screenshot(msg.Addr)
+			SendMessage(&Message{
+				Type: "browser_screenshot",
+				ID:   msg.ID,
+				Data: base64.StdEncoding.EncodeToString(screenshot),
+			})
 		}
 	}
 }
 
-func sendMessage(msg *Message) error {
+func SendMessage(msg *Message) error {
 	quicMutex.Lock()
 	defer quicMutex.Unlock()
 
@@ -172,7 +180,7 @@ func sendMessage(msg *Message) error {
 
 func sendCloseMessage(id string) {
 	msg := Message{Type: "close", ID: id}
-	sendMessage(&msg)
+	SendMessage(&msg)
 	clientMutex.Lock()
 	if cc, ok := clientConns[id]; ok {
 		cc.conn.Close()
